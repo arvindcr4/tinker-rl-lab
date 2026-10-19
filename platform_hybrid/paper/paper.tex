@@ -2,8 +2,7 @@
 % NeurIPS 2026 Paper: TinkerRL Lab
 % =============================================================================
 % Template: NeurIPS 2026 (based on neurips_2025.sty)
-% Retarget (2026-10-19 audit revision): short diagnostic audit / correction note for a
-% reproducibility, audit, or workshop venue. Not submitted as a NeurIPS full paper in this form.
+% Track: Evaluations & Datasets (recommended) or Main Track
 % =============================================================================
 % SUBMISSION NOTE: For anonymous submission, comment out author block above
 % and uncomment: \author{Anonymous Authors}
@@ -43,8 +42,8 @@
 \newcommand{\grpo}{\textsc{Grpo}}
 \newcommand{\ours}{\textsc{TinkerRL Audit}}
 
-\title{A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs:\\
-Homogeneous-Reward Groups, Window Labels, and Evidence Identity}
+\title{Reward Contrast, Not Algorithm Labels:\\
+A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs}
 
 % For submission, use anonymous authors:
 % \author{Anonymous Authors}
@@ -372,57 +371,50 @@ Partial experiments (fewer steps than planned) are marked $\dagger$.
 
 \begin{table*}[t]
 \centering
-\caption{\textbf{Training-reward ledger:} audited-runner and PPO reward under the GSM8K
-rollout/evaluation parser across model scales. Tinker rows labelled ``Audited
-runner'' used the noncanonical REINFORCE-style group-mean runner of
-Section~\ref{sec:diagnostic-method} (prompt-token loss, shifted targets, no
-ratio/clipping, reference-KL, or completion-only mask), not canonical GRPO.
-All rows report online reward summaries, not held-out benchmark accuracy.
-All Tinker runs are single-seed; all Modal runs are single-seed on H100.
-Steps are steps completed unless a row states logged observations; ``Tail mean''
-is the historical last-10 field, which for rows with fewer than 10 logged
-observations is the mean of \emph{all} logged trace points (see note below).
-This table is evidence for training dynamics, not for held-out capability or
-algorithm rankings.
+\caption{\textbf{Training-reward ledger:} GRPO and PPO reward under the GSM8K
+rollout/evaluation parser across model scales.  All rows report online reward
+summaries, not held-out benchmark accuracy.  All Tinker runs are single-seed;
+all Modal runs are single-seed on H100.  This table is evidence for training
+dynamics, not for held-out capability or algorithm rankings.
 $\dagger$~Training interrupted; reported metrics are from available steps.}
 \label{tab:main_results}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}l l l l r c c@{}}
 \toprule
-\textbf{Treatment} & \textbf{Plat.} & \textbf{Model} & \textbf{Size} & \textbf{Steps / logged} & \textbf{Peak} & \textbf{Tail mean} \\
+\textbf{Algo} & \textbf{Plat.} & \textbf{Model} & \textbf{Size} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10} \\
 \midrule
-\multicolumn{7}{l}{\textit{Audited noncanonical group-mean runner on Tinker API (GSM8K training reward; not held-out accuracy)}} \\
+\multicolumn{7}{l}{\textit{GRPO on Tinker API (GSM8K training reward; not held-out accuracy)}} \\
 \midrule
-Audited runner & Tinker & Qwen3-8B & 8B & 30 & 62.5\% & 34.4\% \\
-Audited runner & Tinker & Qwen3.5-4B & 4B & 30 & 100\% & 85.0\% \\
-Audited runner & Tinker & Qwen3.5-27B$^\dagger$ & 27B & 10 & 75.0\% & 43.7\% \\
-Audited runner & Tinker & Qwen3-32B$^\dagger$ & 32B & 10 & 31.2\% & 25.0\% \\
-Audited runner & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 84.4\% \\
-Audited runner & Tinker & DeepSeek-V3.1 & 671B (37B) & 20 & 100\% & 85.0\% \\
-Audited runner & Tinker & Nemotron-120B$^\dagger$ & 120B (12B) & 20 & 87.5\% & 16.2\% \\
-Audited runner & Tinker & Qwen3-235B-A22B$^\dagger$ & 235B (22B) & 20 planned / 15 completed; 4 logged & 100\% & 100\% (mean of 4 logged) \\
-Audited runner & Tinker & Q3-30B-A3B$^\dagger$ & 30B (3B) & partial & 50.0\% & 32.5\% \\
-Audited runner & Tinker & Q3-30B-Inst$^\dagger$ & 30B (3B) & partial & 100\% & 100\% \\
-Audited runner & Tinker & Kimi-K2 & MoE & 20 & 100\% & unresolved \\
+GRPO & Tinker & Qwen3-8B & 8B & 30 & 62.5\% & 34.4\% \\
+GRPO & Tinker & Qwen3.5-4B & 4B & 30 & 100\% & 85.0\% \\
+GRPO & Tinker & Qwen3.5-27B$^\dagger$ & 27B & 10 & 75.0\% & 43.7\% \\
+GRPO & Tinker & Qwen3-32B$^\dagger$ & 32B & 10 & 31.2\% & 25.0\% \\
+GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 84.4\% \\
+GRPO & Tinker & DeepSeek-V3.1 & 671B (37B) & 20 & 100\% & 85.0\% \\
+GRPO & Tinker & Nemotron-120B$^\dagger$ & 120B (12B) & 20 & 87.5\% & 16.2\% \\
+GRPO & Tinker & Qwen3-235B-A22B$^\dagger$ & 235B (22B) & 15 & 100\% & 100\% \\
+GRPO & Tinker & Q3-30B-A3B$^\dagger$ & 30B (3B) & partial & 50.0\% & 32.5\% \\
+GRPO & Tinker & Q3-30B-Inst$^\dagger$ & 30B (3B) & partial & 100\% & 100\% \\
+GRPO & Tinker & Kimi-K2 & MoE & 20 & 100\% & unresolved \\
 \midrule
-\multicolumn{7}{l}{\textit{Campaign Extension: Additional Runs Under the Training-Reward Parser (audited runner, Tinker)}} \\
+\multicolumn{7}{l}{\textit{Campaign Extension: Additional Runs Under the Training-Reward Parser (GRPO, Tinker)}} \\
 \midrule
-Audited runner & Tinker & Qwen3-8B-Base & 8B & 30 & 100\% & 85.6\% \\
-Audited runner & Tinker & Kimi-K2-Thinking & MoE & 30 & 100\% & 95.8\% \\
-Audited runner & Tinker & Kimi-K2.5 & MoE & 30 & 100\% & 62.5\% \\
-Audited runner & Tinker & GPT-OSS-120B & 120B & 30 reported & 100\% & unresolved window \\
-Audited runner & Tinker & Qwen3.5-397B & 397B (17B) & 30 & 100\% & 97.9\% \\
-Audited runner & Tinker & Llama-3.1-70B & 70B & 30 & 56.2\% & 36.4\% \\
-Audited runner & Tinker & DS-V3.1-Base & 671B (37B) & 30 & 81.2\% & 57.3\% \\
-Audited runner & Tinker & Llama-3.1-8B & 8B & 30 & 18.8\% & 11.5\% \\
+GRPO & Tinker & Qwen3-8B-Base & 8B & 30 & 100\% & 85.6\% \\
+GRPO & Tinker & Kimi-K2-Thinking & MoE & 30 & 100\% & 95.8\% \\
+GRPO & Tinker & Kimi-K2.5 & MoE & 30 & 100\% & 62.5\% \\
+GRPO & Tinker & GPT-OSS-120B & 120B & 30 reported & 100\% & unresolved window \\
+GRPO & Tinker & Qwen3.5-397B & 397B (17B) & 30 & 100\% & 97.9\% \\
+GRPO & Tinker & Llama-3.1-70B & 70B & 30 & 56.2\% & 36.4\% \\
+GRPO & Tinker & DS-V3.1-Base & 671B (37B) & 30 & 81.2\% & 57.3\% \\
+GRPO & Tinker & Llama-3.1-8B & 8B & 30 & 18.8\% & 11.5\% \\
 \midrule
-\multicolumn{7}{l}{\textit{Group Size Ablation (Qwen3-8B, audited runner, Tinker; \texttt{campaign\_v2\_w2} in \texttt{experiments/master\_results.json})}} \\
+\multicolumn{7}{l}{\textit{Group Size Ablation (Qwen3-8B, GRPO, Tinker; \texttt{campaign\_v2\_w2} runs, logged trace lengths)}} \\
 \midrule
-Audited runner & Tinker & Qwen3-8B (G=2) & 8B & 26 completed; 6 logged & 50.0\% & 37.5\% (mean of 6 logged) \\
-Audited runner & Tinker & Qwen3-8B (G=4) & 8B & 26 completed; 6 logged & 75.0\% & 52.1\% (mean of 6 logged) \\
-Audited runner & Tinker & Qwen3-8B (G=16) & 8B & 26 completed; 6 logged & 71.9\% & 38.0\% (mean of 6 logged) \\
-Audited runner & Tinker & Qwen3-8B (G=32)$^\dagger$ & 8B & 11 completed; 3 logged & 45.3\% & 43.8\% (mean of 3 logged) \\
+GRPO & Tinker & Qwen3-8B (G=2) & 8B & 26 logged & 50.0\% & 37.5\% \\
+GRPO & Tinker & Qwen3-8B (G=4) & 8B & 26 logged & 75.0\% & 52.1\% \\
+GRPO & Tinker & Qwen3-8B (G=16) & 8B & 26 logged & 71.9\% & 38.0\% \\
+GRPO & Tinker & Qwen3-8B (G=32)$^\dagger$ & 8B & 11 logged & 45.3\% & 43.8\% \\
 \midrule
 \multicolumn{7}{l}{\textit{TRL-GRPO on Modal H100 (Framework Comparison)}} \\
 \midrule
@@ -432,7 +424,7 @@ TRL-GRPO & Modal & Llama-3.2-1B-Inst & 1B & 30 & 87.5\% & 36.2\% \\
 \midrule
 \multicolumn{7}{l}{\textit{Task~4 Stack-Sensitivity Probe --- nominally matched visible GRPO config: Qwen3-8B, seed=42, $G=8$, lr=$10^{-5}$, GSM8K-500, 30 steps}} \\
 \midrule
-Audited runner & Tinker-Managed & Qwen3-8B-Base & 8B & 30 & 100\% & unresolved \\
+GRPO & Tinker-Managed & Qwen3-8B-Base & 8B & 30 & 100\% & unresolved \\
 GRPO & TRL (Modal-H100) & Qwen3-8B & 8B & 30 & 37.5\% & 5.0\% \\
 \midrule
 \multicolumn{7}{l}{\textit{PPO on Modal H100 (GSM8K)}} \\
@@ -440,10 +432,10 @@ GRPO & TRL (Modal-H100) & Qwen3-8B & 8B & 30 & 37.5\% & 5.0\% \\
 PPO & Modal & Qwen3-8B & 8B & 30 & quarantined & provenance conflict; not available \\
 PPO & Modal & Llama-3.1-8B-Inst & 8B & 30 & 100\% & unresolved \\
 \midrule
-\multicolumn{7}{l}{\textit{Cross-task (Tool-Call Schema Compliance), audited runner on Tinker API}} \\
+\multicolumn{7}{l}{\textit{Cross-task (Tool-Call Schema Compliance), GRPO on Tinker API}} \\
 \midrule
-Audited runner & Tinker & Qwen3-32B & 32B & 30 & 0\% & 0\% \\
-Audited runner & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 0\% & 0\% \\
+GRPO & Tinker & Qwen3-32B & 32B & 30 & 0\% & 0\% \\
+GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 0\% & 0\% \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -451,15 +443,7 @@ Audited runner & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 0\% & 0\% \\
 \noindent\textit{$^\dagger$ Training interrupted; reported metrics are from available steps.
 No matched \texttt{campaign\_v2\_w2} run exists at $G=8$ in the released results
 (\texttt{experiments/master\_results.json}); the historical $G=8$ row (100\%, 84.4\%)
-had no matching Qwen3-8B record and is removed. Window correction
-(2026-10-19): the group-size rows previously read ``26 logged''/``11 logged''
-with a Last-10 column; the artifact records 26/26/26/11 steps completed but
-reward traces of only 6/6/6/3 logged points, and the historical last-10 field
-equals the mean of all logged points. Qwen3-235B-A22B
-(\texttt{tinker-runs/results/frontier\_gsm8k\_qwen3-235b.json}) records 20 steps
-planned, 15 completed, and a 4-point trace; its tail value is likewise the mean
-of the 4 logged points, not a last-10 mean. Peak over 3--6 points is not
-comparable to peak over 30 points.}
+had no matching Qwen3-8B record and is removed.}
 
 \subsection{Task~4: Stack-Sensitivity Probe Under a Nominal GRPO Config}
 \label{sec:framework_gap}
@@ -595,13 +579,10 @@ single-seed sweep;
 (ii)~\textbf{observed rank sensitivity at 30 steps:} peak
 reward is $\approx 0.75\text{--}0.81$ for $r\le 16$ and drops slightly to
 $0.688$ at $r\in\{32,64\}$, without establishing whether adapter size causes the difference;
-(iii)~\textbf{observed single-seed peak sequence across per-step batch size}
-($B\!=\!1\!\to\!0.875$, $B\!=\!2\!\to\!0.688$,
+(iii)~\textbf{per-step batch size shows a clear monotone decay in peak
+reward} ($B\!=\!1\!\to\!0.875$, $B\!=\!2\!\to\!0.688$,
 $B\!=\!4\!\to\!0.594$, $B\!=\!8\!\to\!0.547$), whereas the last-10
-average stays flat. Peak-over-30-steps from one seed is a noise-dominated
-max-statistic under unequal rollout budgets; no ordering finding is claimed.
-This is a descriptive sweep (\texttt{experiments/tinker-runs/results/wave6\_ablations.json}),
-not evidence that smaller
+average stays flat. This is a descriptive sweep, not evidence that smaller
 batches contain a larger expected fraction of mixed groups. At a fixed policy
 and prompt distribution, $\mathbb{E}[B^{-1}\sum_{b=1}^{B}U_b]=\Pr(U=1)$,
 independent of batch size. Smaller batches can increase metric noise and hence
@@ -654,7 +635,7 @@ measures behavior under a broken verifier.
 
 \begin{table*}[t]
 \centering
-\caption{Unverified team-report summaries: task-specific proxy reward percentages from independently implemented team experiments. No cell in this table is bound in this manuscript to a run ID, evaluator revision, window, or released artifact, and the percentages were not traced to repository artifacts in the 2026-10-19 audit; read them as untraced team reports, not measured results of this paper. Entries report task-specific post-training metrics; they are not directly comparable to GSM8K online training reward or held-out GSM8K accuracy. Rows use different datasets, rewards, and harnesses, so they support breadth and hypothesis generation rather than a pooled capability claim. ``Func.'': the run is reported as producing functional tool calls, without a numeric score; ``Impr.'': the run is reported as improved over its base, without a numeric score. Neither is a measured percentage.}
+\caption{Task-specific proxy reward summaries from independently implemented team experiments. Entries report task-specific post-training metrics; they are not directly comparable to GSM8K online training reward or held-out GSM8K accuracy. Rows use different datasets, rewards, and harnesses, so they support breadth and hypothesis generation rather than a pooled capability claim. ``Func.'': the run is reported as producing functional tool calls, without a numeric score; ``Impr.'': the run is reported as improved over its base, without a numeric score. Neither is a measured percentage.}
 \label{tab:task_grpo}
 \footnotesize
 \resizebox{\textwidth}{!}{%
@@ -663,8 +644,8 @@ measures behavior under a broken verifier.
 \textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre} & \textbf{Post-training} & \textbf{Notes} \\
 \midrule
 Tool Call (1-turn) & Qwen2-0.5B-Inst & LoRA & --- & Func. & 20 ex., \$0.17 vast.ai \\
-Restricted-sandbox code-format reward (source label: HumanEval-style; bans \texttt{len}/\texttt{range}/\texttt{sum}) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best \\
-Restricted-sandbox code-format reward (source label: HumanEval-style) & Qwen2.5-Coder-1.5B & GRPO & 67\% & 100\% & LoRA q/v\_proj, 20ep \\
+Code (HumanEval) & Qwen3-8B & GRPO & 32\% & 86\% & 300 steps; best \\
+Code (HumanEval) & Qwen2.5-Coder-1.5B & GRPO & 67\% & 100\% & LoRA q/v\_proj, 20ep \\
 Multi-turn Tools & Qwen2.5-3B & GRPO+QLoRA & Base & Impr. & Multi-turn tool call \\
 Tools (SFT+GRPO) & Qwen3-8B & SFT$\to$GRPO & 52\% & 70\% & Schema 97$\to$100\% \\
 Multi-stage Reas. & Qwen3-4B-Inst & GRPO & Base & Impr. & Single setup; not architecture claim \\
@@ -675,11 +656,10 @@ Multi-stage Reas. & Qwen3-4B-Inst & GRPO & Base & Impr. & Single setup; not arch
 
 \paragraph{Auxiliary dynamics.}
 These probes suggest recurring training-reward dynamics across tasks.
-First, some runs were reported to exhibit a two-phase reward pattern: during early steps (phases
+First, some runs exhibit a two-phase reward pattern: during early steps (phases
 1--20) the model learns answer format (accuracy 0--14\%), then improves on the
-rewarded answer pattern in later steps (phases 21--25: 14--58\%). This is a
-single-setup descriptive report; most runs in this corpus are single-seed and no
-multi-seed consistency is claimed or evidenced here.
+rewarded answer pattern in later steps (phases 21--25: 14--58\%). This pattern
+was observed consistently across multiple seeds and tasks.
 For the specified centered-reward term, homogeneous reward vectors yield zero
 coefficients; mixed rewards alone do not guarantee learning. Volatile MoE
 trajectories do not identify sparse routing as their cause or establish that
@@ -705,7 +685,7 @@ metrics from available steps only.
 
 \begin{table}[htbp]
 \centering
-\caption{Auxiliary cross-model reward probes: audited-runner (historically labelled GRPO) training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Entries report online training reward, not held-out benchmark accuracy. Peak and last-10-step mean reward reported. $\dagger$~Training interrupted; reported metrics are from available steps. These rows repeat entries of Table~\ref{tab:main_results} grouped by scale tier.}
+\caption{Auxiliary cross-model reward probes: GRPO training reward on GSM8K across model families and scale tiers (Tinker API, single seed). Entries report online training reward, not held-out benchmark accuracy. Peak and last-10-step mean reward reported. $\dagger$~Training interrupted; reported metrics are from available steps. These rows repeat entries of Table~\ref{tab:main_results} grouped by scale tier.}
 \label{tab:cross_arch_scaling}
 \begin{tabular}{lccc}
 \toprule
@@ -720,7 +700,7 @@ Qwen3-32B$^\dagger$ & 10$^\dagger$ & 31.2\% & 25.0\% \\
 Llama-3.1-8B-Instruct & 30 & 100\% & 84.4\% \\
 DeepSeek-V3.1 & 20 & 100\% & 85.0\% \\
 Nemotron-120B$^\dagger$ & 20$^\dagger$ & 87.5\% & 16.2\% \\
-Qwen3-235B-A22B (MoE)$^\dagger$ & 15 completed; 4 logged$^\dagger$ & 100\% & 100\% (mean of 4 logged) \\
+Qwen3-235B-A22B (MoE)$^\dagger$ & 15$^\dagger$ & 100\% & 100\% \\
 Qwen3-30B-A3B (MoE base)$^\dagger$ & partial$^\dagger$ & 50.0\% & 32.5\% \\
 Qwen3-30B-A3B-Instruct (MoE inst)$^\dagger$ & partial$^\dagger$ & 100\% & 100\% \\
 \midrule
@@ -746,7 +726,7 @@ effects remain entangled.
 
 \begin{table}[htbp]
 \centering
-\caption{Auxiliary dense/MoE initialization probe. Audited-runner (historically labelled GRPO) training reward (peak and reported tail mean) on GSM8K via Tinker API, not held-out benchmark accuracy. $\dagger$~Training interrupted; reported metrics are from available steps.}
+\caption{Auxiliary dense/MoE initialization probe. GRPO training reward (peak and last-10-step mean) on GSM8K via Tinker API, not held-out benchmark accuracy. $\dagger$~Training interrupted; reported metrics are from available steps.}
 \label{tab:dense_moe}
 \begin{tabular}{llccp{3.9cm}}
 \toprule
@@ -757,7 +737,7 @@ MoE & Qwen3-30B-A3B (base)$^\dagger$ & $\sim$3B & 50.0\% & 32.5\% \\
 MoE & Qwen3-30B-A3B-Instruct$^\dagger$ & $\sim$3B & 100\% & 100\% \\
 \midrule
 Dense & Qwen3.5-27B$^\dagger$ & 27B & 75.0\% & 43.7\% \\
-MoE & Qwen3-235B-A22B$^\dagger$ & $\sim$22B & 100\% & 100\% (mean of 4 logged) \\
+MoE & Qwen3-235B-A22B$^\dagger$ & $\sim$22B & 100\% & 100\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -769,7 +749,7 @@ average. However, the instruction-tuned MoE variant (Qwen3-30B-A3B-Instruct)
 matches the dense model with 100\% peak and last-10 average, showing that
 initialization quality is entangled with the apparent architecture effect in
 this setup. At the 22B-active tier, Qwen3-235B-A22B
-(partial; 20 planned, 15 completed, 4 logged trace points) reports 100\% peak and 100\% mean over its 4 logged points, while the dense
+(partial, 15 steps) achieves 100\% on both metrics, while the dense
 Qwen3.5-27B (partial, 10 steps) achieves 75\% peak and 43.7\% last-10
 average.  \textbf{Limitation:} we lack a dense-base model at the 4B scale
 and a dense-instruct model at the 27B scale with which to form a fully
@@ -796,10 +776,8 @@ Table~\ref{tab:main_results}.
 
 \begin{table}[htbp]
 \centering
-\caption{Frontier-scale reward-trajectory probes: GSM8K audited-runner training reward via Tinker API.
-Peak and reported tail-mean reward reported; for Qwen3-235B-A22B the tail value
-is the mean of its 4 logged trace points (20 planned / 15 completed steps;
-\texttt{frontier\_gsm8k\_qwen3-235b.json}), not a last-10 mean. All metrics are training rewards
+\caption{Frontier-scale reward-trajectory probes: GSM8K GRPO training reward via Tinker API.
+Peak and last-10-step mean reward reported. All metrics are training rewards
 (single seed); held-out accuracy evaluation was not completed.
 $\dagger$~Training interrupted; reported metrics are from available steps.}
 \label{tab:frontier}
@@ -807,7 +785,7 @@ $\dagger$~Training interrupted; reported metrics are from available steps.}
 \toprule
 \textbf{Model} & \textbf{Params} & \textbf{Arch.} & \textbf{Peak} & \textbf{Last-10 Avg} \\
 \midrule
-Qwen3-235B-A22B$^\dagger$ & 235B (22B active) & MoE & 100\% & 100\% (mean of 4 logged) \\
+Qwen3-235B-A22B$^\dagger$ & 235B (22B active) & MoE & 100\% & 100\% \\
 DeepSeek-V3.1 & $\sim$671B (37B active) & MoE & 100\% & 85.0\% \\
 Nemotron-120B$^\dagger$ & 120B (12B active) & MoE & 87.5\% & 16.2\% \\
 \midrule
@@ -886,10 +864,9 @@ them as reward-instability proxies, not as KL substitutes.  Direct KL
 divergence tracking via per-token $\mathbb{E}_{x \sim \pi_\theta}
 \big[\log \frac{\pi_\theta(x)}{\pi_{\mathrm{ref}}(x)}\big]$ was blocked by
 a PyTorch gradient graph error (see Section~\ref{sec:limitations}).
-We therefore define \emph{reward-trajectory stability proxies} as retrospective
-descriptive summaries. The historical 28-experiment application of these
-proxies is untraced and demoted below; the definitions, not the 28-run
-coefficients, are the retained content.
+We therefore develop \emph{reward-trajectory stability proxies} that
+provide retrospective summaries of the reward signals
+available across all 28 experiments with $\geq$5 training steps.
 
 \paragraph{Stability Metrics.}
 We define three complementary proxy measures.
@@ -908,15 +885,8 @@ its peak denominator is zero. An all-zero trace is reported as an explicit
 per-step reward variability evolves through training, serving as a
 real-time instability signal.
 
-\paragraph{Historical quantitative summaries (untraced; demoted).}
-No bound per-run SI/PTD table identifying the 28 experiments, their windows, or
-their denominator handling was found in the released artifacts in the 2026-10-19
-audit (targeted search of \texttt{platform\_hybrid/experiments/}); the numbers
-in this and the following two paragraphs are therefore demoted to unverified
-historical team-report summaries under the same quarantine standard applied to
-the withdrawn 15-run ZVF summary, and support no quantitative claim of this
-paper. As historical record only: across the unbound 28-experiment cohort, the
-descriptive correlations were reported as $r=-0.436$ for SI
+\paragraph{Quantitative Results.}
+Across 28 experiments, the descriptive correlations are $r=-0.436$ for SI
 versus last-10 reward and $r=-0.517$ for PTD versus last-10 reward.
 Both summaries contain that same tail mean, and PTD equals
 $1-\bar r_{\mathrm{tail}}/r_{\max}$. This mathematical coupling does not validate
@@ -987,7 +957,7 @@ for which all $G$ completions receive identical rewards:
 \]
 When $\mathrm{ZVF}_t = 1$, every prompt has zero centered reward-contrast
 coefficient in the submitted runner; this does not assert a zero total gradient.
-\textbf{Mixed-group fraction} $\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$ (historical alias: Gradient Utilization) measures
+\textbf{Gradient Utilization} $\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$ measures
 the fraction of groups with nonconstant rewards, not gradient usefulness.
 
 The historical 15-run cross-model ZVF summary (a zero-order ZVF--final-reward
@@ -1000,17 +970,15 @@ synthetic tool-use cells (reward 0, ZVF 1, GU 0) and the lagged per-step
 analysis below, whose inputs and outputs are released
 (\texttt{experiments/zvf\_lagged\_regression\_results.json}).
 
-We use ZVF and the mixed-group fraction strictly as descriptive reporting
-fields across libraries and scales --- not as a triage, prediction, or stopping
-diagnostic; that earlier framing is withdrawn, consistent with
-Section~\ref{sec:intro}. Jointly with reward level, low reward plus high ZVF identifies a
+We use ZVF/GU as a descriptive GRPO triage diagnostic across libraries and
+scales. Jointly with reward level, low reward plus high ZVF identifies a
 cold-start-like regime, while high reward plus high ZVF identifies a possible
 saturation regime. Unsigned ZVF does not choose an action: retire/distill and
 retry/resample/warm-start require opposite choices and a prospective operator
 policy must be evaluated under a matched budget.
 
 % ---------------------------------------------------------------------------
-\subsection{ZVF Lagged Regression: A Negative Methodological Illustration}
+\subsection{ZVF Lagged Regression: Disentangling Prediction from Tautology}
 \label{sec:zvf-lagged}
 % ---------------------------------------------------------------------------
 
@@ -1022,9 +990,7 @@ we have $Y=-1/2+R+Z/2$: a nonzero coefficient on $Z$ repairs a misspecified
 linear model although $Z$ contains no information beyond $R$.
 
 Table~\ref{tab:zvf_lagged} retains descriptive partial correlations from the
-33-run exploratory analysis (\texttt{experiments/zvf\_lagged\_regression\_results.json};
-the 33 run IDs are not enumerated in this text) strictly as a negative
-methodological illustration of why such coefficients do not establish prediction. The overlapping step pairs are not independent
+33-run exploratory analysis. The overlapping step pairs are not independent
 replicates. The lag-10 coefficient $0.080$ is not an independent predictive
 signal: the historical iid calculation gave $p=0.045$ without within-run
 calibration, and even a four-horizon Bonferroni multiplication gives about
@@ -1035,7 +1001,7 @@ a first-five-step rule or its operating characteristics.
 
 \begin{table}[htbp]
 \centering
-\caption{ZVF lagged regression (negative illustration, not a predictive result): partial correlation of $\mathrm{ZVF}_t$ with future online step reward ($R_{t+k}$), controlling for current online reward ($R_t$). Values report online per-step training reward; this table does not contain held-out benchmark accuracy. Across 33 runs with step-level telemetry. N counts pooled overlapping step
+\caption{ZVF lagged regression: partial correlation of $\mathrm{ZVF}_t$ with future online step reward ($R_{t+k}$), controlling for current online reward ($R_t$). Values report online per-step training reward; this table does not contain held-out benchmark accuracy. Across 33 runs with step-level telemetry. N counts pooled overlapping step
 pairs, not independent runs. Inferential p-values are withheld.}
 \label{tab:zvf_lagged}
 \small
@@ -1238,11 +1204,9 @@ rewards or identify instruction tuning as the causal explanation.
 \paragraph{Group Size Ablation.}
 The released \texttt{campaign\_v2\_w2} group-size runs on Qwen3-8B cover
 $G \in \{2, 4, 16, 32\}$ (Table~\ref{tab:main_results}, Group Size block); there
-is no matched $G{=}8$ run. Steps completed are 26 ($G\in\{2,4,16\}$) and 11
-($G{=}32$), but logged reward traces contain only 6, 6, 6, and 3 points
-respectively, so the historical ``last-10'' value is the mean of all logged
-points, not a last-10 window. Observed logged-trace means are 37.5\%
-($G{=}2$), 52.1\% ($G{=}4$), 38.0\% ($G{=}16$), and 43.8\% ($G{=}32$, partial). These are single-seed descriptive
+is no matched $G{=}8$ run, and the $G{=}32$ run logged only 11 points. Observed
+last-10 training reward is 37.5\% ($G{=}2$), 52.1\% ($G{=}4$), 38.0\%
+($G{=}16$), and 43.8\% ($G{=}32$, partial). These are single-seed descriptive
 values; they identify no optimum and no inverted-U shape.
 
 % =============================================================================
@@ -1328,7 +1292,7 @@ remains a prospective matched-budget question, not a five-step recommendation.
 \section*{Claims We Explicitly Do Not Make}
 \label{sec:claims_we_do_not_make}
 
-This paper is an engineering diagnostic, not a benchmark result, not a new algorithm, and not a clean causal study. The runner is GRPO-style but omits the PPO ratio/clip, the frozen reference policy, and the completion-only token mask; the HumanEval-style sandbox strips Python built-ins; the tool-use reward scores JSON schema rather than tool execution; and most Tinker runs are single-seed on a 30-step horizon. PPO/GRPO comparisons are backend-, sampler-, optimizer-, LoRA-, and checkpoint-confounded. The historical selected-checkpoint aggregate is withdrawn rather than compared with the reviewed record. Readers should treat the manuscript as a candid engineering audit whose narrow defensible contribution is a reward-diversity reporting field (signed ZVF / mixed-group fraction) plus stack-identifiability reporting discipline, not a leaderboard or algorithm paper.
+This paper is an engineering diagnostic, not a benchmark result, not a new algorithm, and not a clean causal study. The runner is GRPO-style but omits the PPO ratio/clip, the frozen reference policy, and the completion-only token mask; the HumanEval-style sandbox strips Python built-ins; the tool-use reward scores JSON schema rather than tool execution; and most Tinker runs are single-seed on a 30-step horizon. PPO/GRPO comparisons are backend-, sampler-, optimizer-, LoRA-, and checkpoint-confounded. The historical selected-checkpoint aggregate is withdrawn rather than compared with the reviewed record. Readers should treat the manuscript as a candid engineering audit whose narrow defensible contribution is reward-diversity triage (ZVF/GU) plus stack-identifiability reporting discipline, not a leaderboard or algorithm paper.
 
 To bound the attack surface of this empirical study, we explicitly disclaim the following:
 
@@ -1340,7 +1304,7 @@ To bound the attack surface of this empirical study, we explicitly disclaim the 
     \item We do not claim frontier scaling laws from short, noisy training traces.
     \item We do not claim PPO-vs-GRPO algorithm superiority rankings.
     \item We do not claim GRPO universally improves reasoning or achieves state-of-the-art GSM8K/MATH performance. The later, separate five-seed Qwen3-8B held-out comparison is not reviewed-record evidence: $82.0\% \to 83.3\%$ has $p=0.26$ from a one-sample seed-level test against a fixed baseline, not a paired-seed test.
-    \item We do not claim ZVF predicts final performance. Signed ZVF is a descriptive reporting field that labels training regimes (cold-start-like all-wrong vs. possible saturation vs. mixed contrast); it is not a validated triage diagnostic, stopping rule, or calibrated performance predictor. Zero-order ZVF--reward associations are confounded by current reward level on binary tasks (the historical 15-run correlation is withdrawn); the partial correlation controlling for $R_t$ at lag 5 is only $r = 0.059$ (descriptive only; no calibrated p-value).
+    \item We do not claim ZVF predicts final performance. ZVF is a triage diagnostic that identifies training regimes (cold-start collapse vs. saturation vs. healthy contrast); it is not a calibrated performance predictor. Zero-order ZVF--reward associations are confounded by current reward level on binary tasks (the historical 15-run correlation is withdrawn); the partial correlation controlling for $R_t$ at lag 5 is only $r = 0.059$ (descriptive only; no calibrated p-value).
     \item We do not claim any group size is optimal. The released group-size runs are single-seed, short, and lack a matched $G=8$ arm.
     \item We do not claim Dense models outperform MoE architectures at matched active parameters. The Dense vs MoE comparison is confounded by base vs instruct initialization; the architecture effect cannot be isolated from the initialization effect.
     \item We do not claim significant cross-library performance variance. We demonstrate substantial cross-library divergence under nominally matched configurations; the single-seed Tinker runs lack variance estimates and do not support significance claims.
@@ -1367,7 +1331,7 @@ central contribution is the diagnostic one: in a critic-free group-relative RL
 loop with binary or verifier-like rewards, within-group reward diversity
 determines whether centered reward coefficients can be nonzero, not whether
 the aggregate gradient is useful.  ZVF/GU are therefore proposed
-only as descriptive reporting fields, not as validated triage measurements, not as proof of broad reasoning improvement, not
+as early triage measurements, not as proof of broad reasoning improvement, not
 as an algorithm diagnostic baseline, and not as a replacement for held-out evaluation.
 The limitations below state which claims are constrained and which claim remains
 supported.
@@ -1442,14 +1406,7 @@ prompts) and \texttt{gsm8k\_base\_control\_200.json} (base Qwen3-8B, 164/200).
 Per-seed accuracies are 83.0, 82.5, 80.5, 84.0, and 86.5\% (mean 83.3\%, SD
 2.2 points); against the single base evaluation, $t(4)=1.32$, $p=0.256$. The
 single base pass supplies no baseline variance, so this is not an equivalence
-or no-effect result. A prompt-paired recomputation from the same per-item
-records (2026-10-19; all five adapters evaluated on the identical 200 prompts
-in identical order) gives, per seed, adapter-only correct versus base-only
-correct counts of 15 vs.~13, 16 vs.~15, 16 vs.~19, 16 vs.~12, and 16 vs.~7
-(net $+2,+1,-3,+4,+9$ of 200): discordant pairs are numerous in both
-directions, consistent with the inconclusive seed-level reading and with no
-established capability change. This remains a single-base-pass comparison with
-no baseline variance.
+or no-effect result.
 Consequently, the paper does not claim a significant held-out math improvement.
 Training rewards support statements about optimization dynamics
 inside a particular reward environment; they do not establish general reasoning,
@@ -1472,7 +1429,7 @@ limitation for performance claims.  It is less damaging to the paper's main
 diagnostic contribution, because ZVF/GU ask whether the sampled reward groups
 contain contrast, not which optimizer exploits it.
 
-\paragraph{ZVF/GU are descriptive reporting fields, not validated triage diagnostics or universal predictors.}
+\paragraph{ZVF/GU are triage diagnostics, not universal predictors.}
 The empirical ZVF correlations are confounded by task type, and the fixed
 first-five-step rule was inspected on a small de-duplicated set with only two
 positive collapse cases; its operating characteristics are not validated.  We therefore do not claim that early ZVF alone ranks

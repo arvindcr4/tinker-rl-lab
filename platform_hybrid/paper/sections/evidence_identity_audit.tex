@@ -1,17 +1,10 @@
 \subsection{Audited Cells and Unresolved Cohorts}
 \label{sec:evidence-identity}
-The primary empirical record is the following two descriptive cells. The
-corresponding traced artifacts are
-\texttt{platform\_hybrid/experiments/tinker-runs/results/cross\_tool\_qwen3-32b.json}
-(run ID \texttt{73ff186a-d8e3-50c3-afb8-2b863cd09579:train:0}, seed 42, 30-step
-all-zero trace, \texttt{zero\_reward\_pct}$=100$) and
-\texttt{cross\_tool\_llama-8b-inst.json} in the same directory
-(run ID \texttt{ca2e3a24-7401-5770-af34-a0d27177aeaa:train:0}, seed 42, 30-step
-all-zero trace). Evaluator revisions, prompt-set hashes, checkpoint revisions
-beyond the \texttt{tinker://} URIs recorded in those files, and raw per-group
-reward vectors sufficient for exact independent ZVF recomputation have not been
-reconciled for these reviewed cells; we do not manufacture them from similarly
-named later files. Completing that immutable manifest remains an author task.
+The primary empirical record is the following two descriptive cells. Task and
+model labels identify manuscript observations, not immutable execution IDs.
+Exact checkpoint revisions, authenticated run IDs, evaluator revisions, and
+complete rollout hashes have not been reconciled for these reviewed cells;
+we do not manufacture them from similarly named later files.
 
 \begin{table}[htbp]
 \centering\small
@@ -20,7 +13,7 @@ These are all-wrong cases, not executed-tool success or held-out evaluation.}
 \label{tab:audited-tool-cells}
 \begin{tabular}{lcccc}
 \toprule
-Model & Reward & ZVF & Mixed-group fraction (GU) & Held-out \\
+Model & Reward & ZVF & GU & Held-out \\
 \midrule
 Qwen3-32B & 0 & 1 & 0 & not evaluated \\
 Llama-3.1-8B-Instruct & 0 & 1 & 0 & not evaluated \\

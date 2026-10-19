@@ -18,8 +18,8 @@ were historically labelled ``GRPO'' on the Tinker stack, the actual treatment is
 this audited runner: a REINFORCE-style group-mean-centred, group-SD-standardised
 loss summed over all returned (prompt and completion) token log-probabilities,
 with shifted targets and a dummy zero target, and without a PPO ratio/clipping,
-reference-KL term, completion-only masking, or length normalisation. Ledger tables
-in this revision label those rows ``Audited runner'' accordingly. It was deliberately minimal
+reference-KL term, completion-only masking, or length normalisation. The ledger
+(Table~\ref{tab:main_results}) labels those rows ``Audited runner'' accordingly. It was deliberately minimal
 for a narrow audit of centered rewards: it omits a PPO probability ratio and
 clipping, frozen-reference KL, and completion-only token masking. Those omissions
 do not make the omitted terms irrelevant. Clipping and completion-only masking can
@@ -63,7 +63,12 @@ Backend optimizer state and any unobserved terms are outside the identity.
 This source snapshot is evidence of local implementation semantics, not proof
 that a particular reviewed execution used that exact commit. Later corrected
 alignment/masking code must not be projected onto historical runs. The two
-reviewed cell-to-execution mappings remain incomplete.
+reviewed cell-to-execution mappings remain incomplete. The candidate runner for
+those cells (\path{experiments/tinker-runs/scripts/tinker_parallel_runner.py} at
+commit \texttt{c68110a2}; Section~\ref{sec:evidence-identity}) computes the same
+coefficients (group mean, population SD plus $10^{-8}$) and the same summed
+log-probability loss over a shifted prompt-plus-response target with an
+appended zero token.
 For binary rewards, report all-wrong, all-correct, and mixed group fractions
 separately. For graded schema rewards, also identify homogeneous intermediate
 scores; binary Bernoulli formulas do not apply to that entire reward scale.

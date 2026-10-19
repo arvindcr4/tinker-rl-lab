@@ -1,0 +1,23 @@
+% =============================================================================
+% Abstract for paper 05 only (platform_hybrid/paper/paper.tex).
+% Forked 2026-10-19 from sections/abstract.tex, which is also consumed by the
+% archived U01 compendium root; edit this file, not the shared one.
+% =============================================================================
+\begin{abstract}
+Critic-free group-relative RL centres each completion's reward on its group
+mean, so a prompt whose completions all receive the same reward contributes no
+centred reward contrast. This is an audit and correction record of one
+heterogeneous run corpus, not a new algorithm, benchmark, diagnostic, or
+algorithm ranking. We report three things. First, for the specified
+noncanonical runner (no ratio/clipping, reference-KL, or completion-only mask)
+homogeneous rewards make the centred reward-contrast term exactly zero; this
+does not imply a zero total gradient and does not transfer to canonical GRPO.
+Second, the two reviewed synthetic tool-use cells have reward 0 and
+zero-variance fraction (ZVF) 1 at every logged step, with no held-out
+evaluation; they are descriptive all-wrong cases whose cause (policy, parser,
+or prompt template) is not identified, and they validate no predictor,
+triage rule, or stopping policy. Third, an artifact-bound re-audit of the
+training-reward ledger corrects window labels, quarantines rows whose
+artifacts conflict, and withdraws untraced summaries. We do not test whether
+reward contrast rather than algorithm labels explains cross-stack gaps.
+\end{abstract}

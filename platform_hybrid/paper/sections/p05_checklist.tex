@@ -1,0 +1,88 @@
+% Paper-05 fork (2026-10-19) of sections/checklist.tex, which the archived U01
+% roots also use. Checklist for the audit manuscript, not the historical claim list.
+\section*{NeurIPS Paper Checklist}
+\begin{enumerate}
+\item \textbf{Claims.} Do the main claims reflect the contributions and scope?
+\answerYes{The abstract, introduction, and claims sections use the same three
+contributions: a centered-reward identity for the specified runner, an
+artifact-bound audit of the two reviewed cells, and a ledger re-audit under one
+binding standard. No algorithm ranking, validated triage or stopping rule,
+independent predictive signal, or intervention benefit is claimed.}
+
+\item \textbf{Limitations.} Are limitations discussed?
+\answerYes{Section~\ref{sec:limitations} addresses the noncanonical objective,
+short horizons, missing replications, proxy rewards, backend opacity, and missing
+telemetry. Section~\ref{sec:evidence-identity} lists unresolved cohorts.}
+
+\item \textbf{Theory assumptions and proofs.} Are assumptions and derivations stated?
+\answerYes{Section~\ref{sec:diagnostic-method} specifies the local loss and the
+centered-coefficient identity. Section~\ref{sec:zvf-theory} distinguishes empirical
+ZVF from its conditional Bernoulli expectation. Appendix~\ref{app:audit-regressions}
+gives deterministic checks. No zero-total-gradient or learning-benefit theorem
+is claimed.}
+
+\item \textbf{Experimental result reproducibility.} Is all needed information disclosed?
+\answerNo{Local implementation is inspectable and ledger rows are recomputed
+from named artifacts by a gate script, but execution-to-source mappings,
+checkpoint revisions, server internals, and raw group rewards are not available.
+Table~\ref{tab:availability-audit} records the boundaries.}
+
+\item \textbf{Open access to data and code.} Are reproduction artifacts openly accessible?
+\answerPartial{Source, the cited result files, and twelve public Hub
+repositories (exact names and revisions in
+\texttt{manifests/p05\_hub\_repositories.json}) are available; ten hold
+result metadata only. No blanket checkpoint or telemetry availability is
+certified.}
+
+\item \textbf{Experimental setting/details.} Are relevant settings specified?
+\answerPartial{Nominal configurations and cohort-specific exceptions are described;
+missing run revisions, logging-window definitions, and backend details remain
+explicitly unresolved. Five-seed replication does not apply to every experiment.}
+
+\item \textbf{Experiment statistical significance.} Are uncertainty and inference appropriate?
+\answerNo{The historical step-iid tests, synthetic-seed bootstrap intervals, and
+inconsistent correction-family decisions are withdrawn. This audit supplies
+descriptive observations and a future eligibility policy, not new inferential
+results (Section~\ref{sec:statistical-policy}).}
+
+\item \textbf{Experiments compute resources.} Are resource requirements fully reported?
+\answerNo{No reconciled spend or GPU-hour ledger exists.
+Section~\ref{sec:compute_accounting} records the arithmetic discrepancy and
+Section~\ref{sec:carbon} why no carbon figure is reported.}
+
+\item \textbf{Code of ethics.} Is ethical compliance discussed?
+\answerPartial{Section~\ref{sec:impact_standalone} discusses foreseeable misuse,
+reward hacking, data provenance, and uncertainty. This checklist does not certify
+unverified artifact-release or license completeness.}
+
+\item \textbf{Broader impacts.} Are positive and negative impacts discussed?
+\answerYes{The ethics statement discusses research accessibility and potential
+misuse. Neither capability uplift nor compute-saving benefit is established.}
+
+\item \textbf{Safeguards.} Are appropriate safeguards described?
+\answerPartial{Tool-schema scores do not establish safe tool execution. Adapter
+release does not preserve safety guarantees; open-ended tool use and safety
+benchmarks have not been evaluated.}
+
+\item \textbf{Licenses for existing assets.} Are assets credited and licenses stated?
+\answerPartial{Section~\ref{sec:provenance} lists dataset sources and reported
+licenses. Exact revisions and downstream restrictions need artifact-specific
+verification before redistribution.}
+
+\item \textbf{New assets.} Are new assets documented?
+\answerPartial{The synthetic prompts, reward, and local objective are described
+and hashed in \texttt{manifests/p05\_reviewed\_cells\_manifest.json};
+execution-commit binding, raw group rewards, and checkpoint revisions remain
+unbound.}
+
+\item \textbf{Crowdsourcing and human subjects.} Are participant details supplied?
+\answerNA{No new human-participant study or crowdsourcing is reported.}
+
+\item \textbf{IRB approvals.} Is an applicable approval documented?
+\answerNA{No new human-participant study is reported; this is not a claim of
+formal institutional review of every downstream use.}
+
+\item \textbf{LLM usage.} Is use of LLMs disclosed?
+\answerYes{LLMs are the subject of the experiments, and AI assistance in
+manuscript preparation is disclosed in the acknowledgments.}
+\end{enumerate}

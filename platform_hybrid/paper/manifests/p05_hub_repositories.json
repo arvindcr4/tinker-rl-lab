@@ -1,0 +1,156 @@
+{
+  "schema": "p05-hub-repositories/1",
+  "retrieved": "2026-10-19",
+  "method": "GET https://huggingface.co/api/models/<repo> (public, unauthenticated); author=arvindcr4 search=tinker-rl-bench returned exactly these 12 repositories",
+  "repositories": [
+    {
+      "repo": "arvindcr4/tinker-rl-bench-arch_gsm8k_gpt-oss-20b",
+      "revision": "2ba953608fb0511c53cb6f31e0d0f86e7eb755de",
+      "last_modified": "2026-04-19T06:35:35.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-arch_gsm8k_kimi-k2",
+      "revision": "d402bd5bb7f9db58d8e2bf8be31c398ef1c39e32",
+      "last_modified": "2026-04-19T06:48:31.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-cross_tool_llama-8b-inst",
+      "revision": "4f25a91dc334d3c27a7dd050924c8c97221f675c",
+      "last_modified": "2026-04-18T16:01:52.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-cross_tool_qwen3-32b",
+      "revision": "3f95b71094cd92c6f2107c103dee73979144494d",
+      "last_modified": "2026-04-19T03:41:35.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-frontier_gsm8k_deepseek-v3.1",
+      "revision": "3259099ffda2c174b3dc7e53f869f54354c0d6ed",
+      "last_modified": "2026-04-18T16:05:46.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-frontier_gsm8k_nemotron-120b",
+      "revision": "3a695b8b74a2dfc62faa7f816df29927272eb55d",
+      "last_modified": "2026-04-19T03:31:56.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-kl_track_Qwen3-8B_s42",
+      "revision": "8f3b5b5fda23738c990c8e0f7ab81036e93729fe",
+      "last_modified": "2026-04-19T03:03:01.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-ppo_gsm8k_Llama-3.1-8B-Instruct_s42",
+      "revision": "4bd62a53ce352ea48c34f4272186703c0bc84b23",
+      "last_modified": "2026-04-19T03:07:58.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "adapter_config.json",
+        "adapter_model.safetensors",
+        "chat_template.jinja",
+        "tokenizer.json",
+        "tokenizer_config.json"
+      ],
+      "holds_adapter_weights": true
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-ppo_gsm8k_Qwen3-8B_s42",
+      "revision": "e6c30ffa74f0cac1b5349c3500d48ed80f1d2fcd",
+      "last_modified": "2026-04-19T03:15:13.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "adapter_config.json",
+        "adapter_model.safetensors",
+        "chat_template.jinja",
+        "tokenizer.json",
+        "tokenizer_config.json"
+      ],
+      "holds_adapter_weights": true
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-scale_gsm8k_llama-8b-inst",
+      "revision": "f93d28be9bb142b9c967fbbb175bd68c38272676",
+      "last_modified": "2026-04-19T04:11:45.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-scale_gsm8k_qwen3-8b",
+      "revision": "f7ac573b0510c777fdd108ad0f83e20b474815ea",
+      "last_modified": "2026-04-18T16:31:18.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    },
+    {
+      "repo": "arvindcr4/tinker-rl-bench-scale_gsm8k_qwen3.5-4b",
+      "revision": "0c6589445ced16d4f61ee269e6f5ccc82e9b0cff",
+      "last_modified": "2026-04-19T03:34:23.000Z",
+      "files": [
+        ".gitattributes",
+        "README.md",
+        "results.json",
+        "step_log.json"
+      ],
+      "holds_adapter_weights": false
+    }
+  ]
+}

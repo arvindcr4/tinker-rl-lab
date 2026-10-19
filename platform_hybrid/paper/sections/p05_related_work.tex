@@ -1,0 +1,57 @@
+% Paper 05 only: related work cut to the load-bearing lineage (ARS 2026-10-19,
+% R2-W1 / R2-W3). Sentences are condensed from sections/related_work_v2.tex
+% (shared with archived roots, left unchanged); quoted external effect sizes
+% are dropped rather than repeated unverified.
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Zero-advantage diagnostics and interventions.}
+Recent work pre-empts the diagnostic used here. The Advantage Collapse Rate
+(ACR) of AVSPO~\cite{he2026advantage} measures the same homogeneous-group
+advantage collapse that we call ZVF (ACR thresholds reward SD while ZVF uses
+exact equality; matching thresholds and prompt weights makes the measured
+object coincide) and reports that it predicts stagnation and final performance;
+Gradient Starvation~\cite{nie2026gradstarvation} shows that the true degeneracy
+rate exceeds the i.i.d.\ Bernoulli prediction by Jensen's inequality.
+DAPO~\cite{yu2025dapo} discards homogeneous groups through dynamic sampling;
+VCRL~\cite{jiang2025vcrl} and online difficulty filtering~\cite{bae2025online}
+select prompts by group reward variance or intermediate pass rate;
+GRESO~\cite{zhang2026greso} pre-screens prompts before sampling;
+CPPO~\cite{lin2025cppo} prunes completions after rollout;
+NGRPO~\cite{nan2025ngrpo} calibrates advantages so that all-incorrect groups
+still carry gradient; query recycling treats zero-variance queries as
+candidates for later resampling~\cite{coelho2026recycling}; and
+AERO~\cite{zhang2026aero} pre-screens prompts with a posterior over difficulty.
+These are prior or concurrent diagnostics and interventions, not evidence for
+the audited runner. Relative to them this audit adds no measurable, estimator,
+or intervention; it contributes a correction record and the requirement that
+the fraction be reported signed and bound to a cohort.
+
+\paragraph{Objective variants.}
+GRPO was introduced with DeepSeekMath~\cite{shao2024deepseekmath}.
+Dr.~GRPO~\cite{tong2025drgrpo} removes a response-length bias and a
+question-difficulty bias by using a constant loss normaliser and dropping the
+standard-deviation denominator; GSPO~\cite{qwen2025gspo} defines the importance
+ratio at the sequence level; Wu et al.~\cite{wu2025grpodpo} relate GRPO and DPO
+through contrastive-gradient representations; and TPO~\cite{kaddour2026tpo}
+targets a tilted distribution whose homogeneous-group first-epoch
+reward-directed gradient is zero at the rollout snapshot. The audited runner is
+none of these (Section~\ref{sec:diagnostic-method}).
+
+\paragraph{Implementation sensitivity and reporting.}
+Implementation Matters~\cite{engstrom2020implementation} and Henderson et
+al.~\cite{henderson2018deep} document how implementation choices and seeds move
+apparent policy-gradient gains; \texttt{rliable}~\cite{agarwal2021deep}
+introduced interval estimates and performance profiles for few-run reporting;
+and controlled multi-algorithm studies on shared infrastructure find
+scale-dependent ranking inversions~\cite{li2026oxrl}. Verifier errors and
+evaluation artefacts can inflate apparent reasoning gains~\cite{zhang2025verifybench,
+hochlehnert2025sober}. Framework defaults (TRL~\cite{vonwerra2022trl},
+OpenRLHF~\cite{hu2024openrlhf}, veRL~\cite{sheng2024verl},
+\tinker{}~\cite{thinkingmachines2024tinker}) differ in advantage
+normalisation, KL estimators, loss masking, rollout batching, and
+importance-sampling granularity; these are possible confounders of any
+cross-stack row here, not identified causes. Pineau et
+al.~\cite{pineau2020improving} and ACM Artifact Review and
+Badging~\cite{acm2020badges} supply the reproducibility vocabulary used in
+Section~\ref{sec:reproducibility}.

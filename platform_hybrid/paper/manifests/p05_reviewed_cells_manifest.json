@@ -1,0 +1,111 @@
+{
+  "schema": "p05-reviewed-cells-manifest/1",
+  "generated_by": "platform_hybrid/paper/scripts/p05_build_reviewed_cells_manifest.py",
+  "cells": [
+    {
+      "tag": "cross_tool_qwen3-32b",
+      "model": "Qwen/Qwen3-32B",
+      "local_artifact": {
+        "path": "platform_hybrid/experiments/tinker-runs/results/cross_tool_qwen3-32b.json",
+        "sha256": "55f0b6b237cab0ed0f80c280ba1ad282f1664668ea3499f890574d04acb8f4f8",
+        "git_blob_at_HEAD": "f0d1824bb2b54b3d2102378bf05ff3662669012f"
+      },
+      "hub_mirror": {
+        "repo": "arvindcr4/tinker-rl-bench-cross_tool_qwen3-32b",
+        "revision": "3f95b71094cd92c6f2107c103dee73979144494d",
+        "files": [
+          "README.md",
+          "results.json",
+          "step_log.json"
+        ],
+        "results_json_sha256": "55f0b6b237cab0ed0f80c280ba1ad282f1664668ea3499f890574d04acb8f4f8",
+        "results_json_identical_to_local": true,
+        "contains_adapter_weights": false
+      },
+      "tinker_run_id": "73ff186a-d8e3-50c3-afb8-2b863cd09579:train:0",
+      "tinker_checkpoint_uri": "tinker://73ff186a-d8e3-50c3-afb8-2b863cd09579:train:0/sampler_weights/final",
+      "config": {
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-05,
+        "group": 8,
+        "steps": 30
+      },
+      "recorded_timestamp": "2026-04-19T03:41:34.408077",
+      "recomputation_from_stored_step_log": {
+        "logged_steps": 30,
+        "steps_with_reward_0": 30,
+        "steps_with_zvf_1": 30,
+        "mean_reward": 0.0,
+        "mean_zvf": 1.0
+      },
+      "raw_per_group_reward_vectors": "UNBOUND: not stored locally or on the Hub; only per-step mean reward and per-step ZVF were logged, so ZVF cannot be recomputed independently from raw rewards",
+      "raw_completions": "UNBOUND: not stored; parser/template failure cannot be distinguished from policy failure"
+    },
+    {
+      "tag": "cross_tool_llama-8b-inst",
+      "model": "meta-llama/Llama-3.1-8B-Instruct",
+      "local_artifact": {
+        "path": "platform_hybrid/experiments/tinker-runs/results/cross_tool_llama-8b-inst.json",
+        "sha256": "d4babb2f92318c0bfa6b3b4c6ecffaaf4e234864a4c0a737f83b6f23cf622ea3",
+        "git_blob_at_HEAD": "42b35370e2669e3828a92eb9619d9d500f4d996f"
+      },
+      "hub_mirror": {
+        "repo": "arvindcr4/tinker-rl-bench-cross_tool_llama-8b-inst",
+        "revision": "4f25a91dc334d3c27a7dd050924c8c97221f675c",
+        "files": [
+          "README.md",
+          "results.json",
+          "step_log.json"
+        ],
+        "results_json_sha256": "d4babb2f92318c0bfa6b3b4c6ecffaaf4e234864a4c0a737f83b6f23cf622ea3",
+        "results_json_identical_to_local": true,
+        "contains_adapter_weights": false
+      },
+      "tinker_run_id": "ca2e3a24-7401-5770-af34-a0d27177aeaa:train:0",
+      "tinker_checkpoint_uri": "tinker://ca2e3a24-7401-5770-af34-a0d27177aeaa:train:0/sampler_weights/final",
+      "config": {
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-05,
+        "group": 8,
+        "steps": 30
+      },
+      "recorded_timestamp": "2026-04-18T16:01:52.013977",
+      "recomputation_from_stored_step_log": {
+        "logged_steps": 30,
+        "steps_with_reward_0": 30,
+        "steps_with_zvf_1": 30,
+        "mean_reward": 0.0,
+        "mean_zvf": 1.0
+      },
+      "raw_per_group_reward_vectors": "UNBOUND: not stored locally or on the Hub; only per-step mean reward and per-step ZVF were logged, so ZVF cannot be recomputed independently from raw rewards",
+      "raw_completions": "UNBOUND: not stored; parser/template failure cannot be distinguished from policy failure"
+    }
+  ],
+  "candidate_runner": {
+    "commit": "c68110a252edee61dc0d800a07f74ecf72794efa",
+    "path_at_commit": "experiments/tinker-runs/scripts/tinker_parallel_runner.py",
+    "git_blob": "c5f3a67edd8585d42ce32cb6eff7f8ed7fd4edef",
+    "binding": "CANDIDATE: earliest committed source whose experiment list contains both tags; that this exact source executed the runs is not proven",
+    "prompt_set": {
+      "function": "get_tool_use",
+      "n_prompts": 10,
+      "source_sha256": "fba1faa169c7eec77b8ea8cb44272495f382891548f5b59f374558b2be471008",
+      "chat_template": "Qwen ChatML markers (<|im_start|>) hard-coded for every model, including Llama-3.1-8B-Instruct"
+    },
+    "system_prompt_sha256": "81dd64d42206a32c3e8e9c19d17f14b4f1c444cd1b0d8dd66bf26ab54df65011",
+    "reward_function": {
+      "function": "reward_tool",
+      "source_sha256": "67686d0e39b547e40f1951d6ddd0f81183a5d62c4a87a7bc5447bad14921529e",
+      "semantics": "0.3 if json.loads(response.strip()) succeeds, +0.4 tool name match, +0.3 expected argument keys present; 0.0 otherwise"
+    },
+    "batch_prompts_per_step": 2
+  },
+  "unbound_fields": {
+    "evaluator_revision": "UNBOUND: no evaluator beyond the in-runner reward exists for these cells; held-out evaluation was not run",
+    "checkpoint_revision": "UNBOUND beyond the tinker:// sampler URI; managed backend",
+    "tinker_sdk_version": "CONFLICT: ethics text states tinker==0.16.1; Hub model cards state Tinker API v0.18.1",
+    "dataset_card": "Hub model cards list openai/gsm8k for these tool_use runs; the candidate runner uses the 10 in-source prompts above"
+  }
+}

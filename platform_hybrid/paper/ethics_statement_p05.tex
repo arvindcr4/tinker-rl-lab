@@ -1,0 +1,347 @@
+% =============================================================================
+% Ethics Statement and Broader Impact -- paper-05 fork (2026-10-19 ARS revision)
+% Forked from ethics_statement.tex, which ethics_wrapper.tex and the archived U01
+% roots still use; edit this file for platform_hybrid/paper/paper.tex only.
+% Intended placement: after the Conclusion section, before References.
+% Label: \label{sec:impact_standalone}
+% Target length: >= 2 pages (NeurIPS Broader Impact guidance).
+% =============================================================================
+
+\section{Ethics, Limitations, and Broader Impact}
+\label{sec:impact_standalone}
+
+This statement complements Section~\ref{sec:limitations} with a dual-use
+analysis, the status of compute and carbon accounting, data provenance, the
+closed-source training backend, and methodological limits we did not close.
+
+% ---------------------------------------------------------------------------
+\subsection{Dual-Use Analysis: Misuse Risks of Reasoning RL}
+\label{sec:dualuse}
+% ---------------------------------------------------------------------------
+
+\paragraph{Threat model.}
+\ours{} releases (i) training scripts that apply GRPO to the GSM8K
+\cite{cobbe2021training} mathematical reasoning benchmark and to the
+Salesforce xLAM-Function-Calling-60k \cite{liu2024xlam} tool-use corpus,
+(ii) twelve public Hugging Face repositories
+\texttt{arvindcr4/tinker-rl-bench-<tag>}, enumerated with their revisions in
+\path{platform_hybrid/paper/manifests/p05_hub_repositories.json}; ten hold only
+result JSON, step logs, and model cards, and two
+(\texttt{ppo\_gsm8k\_Qwen3-8B\_s42}, \texttt{ppo\_gsm8k\_Llama-3.1-8B-Instruct\_s42})
+hold LoRA adapter weights from the Modal PPO runs, and (iii) diagnostic code for
+Zero-Variance Fraction, reward-stability, and length-bias analysis. We
+analyse four concrete misuse pathways these artefacts could, in principle,
+enable, and we describe the existing guardrails and the residual risk we
+judge acceptable for publication.
+
+\paragraph{M1. Weaponisation of mathematical reasoning.}
+The most capability-relevant artefact we release is GRPO training code evaluated
+on grade-school arithmetic and multi-step reasoning; the reviewed evidence is
+inconclusive about a capability improvement. A malicious
+operator could attempt to extend this pipeline to tasks of greater
+dual-use concern, e.g., chemistry olympiad problems, cryptographic key
+recovery, or financial fraud. We judge the \emph{marginal} uplift provided
+by our release to be small for three reasons. First, no capability change is
+established: the base Qwen3-8B checkpoint already scores 164/200 on the
+held-out GSM8K slice, and the separate five-adapter check
+(Section~\ref{sec:heldout}) is inconclusive. Its seed-level difference is not
+a bound on capability change, which remains unmeasured within wide uncertainty
+(single base pass, no baseline variance); ``inconclusive'' does not establish
+``small uplift''.
+Second, the public literature already contains GRPO implementations
+\cite{shao2024deepseekmath, openrlhf2024, verl2024, vonwerra2022trl} that are at
+least as capable. Third, any reasoning uplift is bounded by the rewarder:
+GSM8K rewards use exact-match against a human-written gold answer, which
+does not generalise to the domains listed above without a new reward
+signal, which itself requires expertise and labelled data.
+
+\paragraph{M2. Reward hacking and the long-term alignment risk.}
+GRPO, like all policy-gradient RL from a proxy reward, is vulnerable to
+reward hacking: the model learns to exploit idiosyncrasies of the reward
+function rather than solve the intended task \cite{skalse2022specificationgaming,
+krakovna2020specification}. Length and long-horizon
+behaviour were not logged uniformly (Section~\ref{sec:limitations}), so reward
+hacking is neither demonstrated nor excluded.
+Users who apply our scripts to under-specified reward functions in
+production settings (e.g., a custom ``helpfulness'' classifier) may observe
+models that appear to improve on held-out metrics while silently
+optimising against unintended proxies. We include the Zero-Variance
+Fraction and reward-stability diagnostics precisely as retrospective summaries; they do not identify policy drift or reward hacking.
+
+\paragraph{M3. Circumventing safety training via distillation or tool-use.}
+The tool-use track trains LoRA adapters that teach a base model to emit
+schema-valid JSON function calls \cite{liu2024xlam}. A motivated adversary
+could in principle use the same pipeline to teach a base model to emit
+jailbreak prompts as ``tool calls'' or to invoke an adversarial external
+tool. We mitigate this by (a) not releasing adapter weights for the tool-use runs
+(the corresponding Hub repositories hold result metadata only) and releasing only
+adapters, not merged weights, elsewhere,
+while noting that an adapter can still alter safety behavior and does not
+guarantee that instruct-model safeguards remain effective; (b) stating here that the tool-use runs used a narrow schema (five
+synthetic tools) and were not safety-evaluated for open-ended function
+calling; and (c) not releasing any function-calling harness that would
+actually execute emitted calls.
+
+\paragraph{M4. Compute-efficiency externalities.}
+This audit makes no demonstrated efficiency claim or group-size recommendation. Improved training efficiency is
+itself dual-use: it lowers the cost of running adversarial fine-tuning at
+scale. We judge this externality to be modest relative to the already-low
+cost of fine-tuning a 0.6B--8B model with commodity LoRA recipes
+\cite{hu2022lora}, but we flag it explicitly.
+
+\paragraph{Residual risk.}
+After weighing M1--M4 we judge that the reproducibility, calibration, and
+pedagogical benefits of releasing \ours{} outweigh the residual misuse
+risk. We adopt the standard mitigation of releasing adapters (not merged
+weights), documenting intended use and out-of-scope use in model cards,
+and publishing alongside the diagnostics a researcher would need to detect
+reward hacking.
+
+% ---------------------------------------------------------------------------
+\subsection{Compute Cost Accounting}
+\label{sec:compute_accounting}
+% ---------------------------------------------------------------------------
+
+No reconciled spend ledger exists. The historical platform entries (retained,
+for audit only, in the shared \path{platform_hybrid/paper/ethics_statement.tex})
+are mutually inconsistent: excluding Colab, their numeric ranges sum to USD
+147--177 against an earlier stated USD 130--140 total, and cash versus credits,
+dates, cohort overlap, and failed-run inclusion are unreconciled. We therefore
+report no spend figures and no project total.
+
+\paragraph{Hidden costs.} Beyond direct platform spend, the project
+consumed human labour (approximately six student-FTE-months, unpaid) and
+infrastructure generously subsidised by PES University's LLM Research
+Group (shared access to one A100 node used for TRL baselines and
+pre-submission sanity checks). No author received commercial compensation
+from Thinking Machines, Modal, or any other vendor mentioned.
+
+\paragraph{Failed-run accounting.} Some spend was consumed by runs that
+failed (JWT expiry, API stalls for GPT-OSS-20b and Kimi-K2 before re-run, the
+KL-tracking gradient bug); the failed-run subset is not reconciled, so no
+amount is stated.
+
+% ---------------------------------------------------------------------------
+\subsection{Carbon Footprint Estimation}
+\label{sec:carbon}
+% ---------------------------------------------------------------------------
+
+No measured energy or emissions data exist for this project. Tinker does not
+disclose hardware allocation or GPU-hours, and the historical Modal GPU-hour
+figures conflict (18 versus 250 GPU-hours in different summaries). Earlier
+versions tabulated conditional scenarios (TDP $\times$ assumed hours $\times$
+PUE $\times$ grid intensity, following \citet{patterson2024empirical} and
+\citet{strubell2019energy}); because their hours are unreconciled and their
+accelerator counts assumed, any summed total would be read as a footprint it is
+not, so no carbon figure is reported. A future release needs a single ledger
+with dates, cohort IDs, GPU counts, measured versus assumed hours, and failure
+status before reporting totals.
+
+\paragraph{Offset and mitigation.}
+We did not purchase carbon offsets. Instead, we have (a) published run
+result files and step logs (Section~\ref{sec:reproducibility}) so that
+downstream users need not re-run the experiments to inspect them; (b) retained local step-level CSV logs so that
+learning curves can be inspected without re-training; and (c) listed the failed and quarantined runs, so that
+replicators can skip them. We regard reproducibility-by-artefact as a
+more durable mitigation than offsets.
+
+% ---------------------------------------------------------------------------
+\subsection{Data Provenance}
+\label{sec:provenance}
+% ---------------------------------------------------------------------------
+
+\ours{} uses only publicly released research datasets. No private data,
+personally identifiable information, or licensed proprietary content is
+used. No human annotators were employed during this work. We document
+each dataset below.
+
+\paragraph{GSM8K \cite{cobbe2021training}.}
+Grade-school math word problems (7{,}473 train / 1{,}319 test)
+authored by human writers contracted by OpenAI. Released under the
+\textbf{MIT License} via \url{https://github.com/openai/grade-school-math}.
+We use the standard train/test splits without modification. The canonical
+citation is \citet{cobbe2021training}. Known limitations of GSM8K include
+gender-neutral but culturally US-centric word problems (names, currencies,
+sports) and a moderate rate of human-labelling errors estimated at
+\textasciitilde 2\% by \cite{zhang2024gsm1k}. Our held-out evaluation
+respects the test/train split.
+
+\paragraph{Salesforce xLAM-Function-Calling-60k \cite{liu2024xlam}.}
+60{,}000 function-calling examples generated by Salesforce Research as
+training data for the xLAM agentic model family. Released under the
+\textbf{CC BY 4.0} license via \url{https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k}.
+We use the public release as-is in tool-use tracks of the broader corpus; no
+xLAM-based result is displayed in this audit.
+Known limitations: xLAM schemas are synthetic and skew toward cleanly-typed
+arguments; the dataset under-represents ambiguous, error-handling, and
+multi-turn tool-calling. Attribution to Salesforce is required by the
+license and is provided in Section~\ref{sec:acknowledgments} and in the
+xLAM-derived model cards.
+
+\paragraph{HumanEval \cite{chen2021codex}.}
+164 Python programming problems with unit tests, released by OpenAI under
+the \textbf{MIT License}. The local restricted sandbox does not implement an unmodified standard
+pass@$k$ evaluation; code results are harness-bound reward probes. Known
+limitations: small scale, English-language docstrings, single-language
+coverage; documented contamination concerns against frontier pretraining
+corpora \cite{riddell2024contamination}.
+
+\paragraph{NuminaMath \cite{li2024numinamath}.}
+Used by collaborator Mohammad Rafi for the multi-stage
+GSM8K+NuminaMath pipeline. Released under \textbf{Apache 2.0}. We use a
+downstream checkpoint reported by Rafi; our repository contains only his
+scripts and the Apache-licensed derivative weights.
+
+\paragraph{Open-Platypus \cite{lee2023platypus}.}
+3{,}000 SFT examples used by collaborator Madhu for Qwen3-8B code
+generation warm-up. Open-Platypus is a curated subset released under
+\textbf{CC BY-NC 4.0}; the non-commercial restriction is respected in our
+release, which is academic-use only.
+
+\paragraph{Synthetic tool-use prompts (authored).}
+The reviewed all-wrong cells use ten authored requests over five synthetic tools
+(calculator, weather, search, reminder, translate) defined in the candidate
+runner source (Section~\ref{sec:evidence-identity}; hash in the reviewed-cell
+manifest). An earlier version of this statement described a different five-tool
+corpus under \texttt{data/synthetic\_tools/}; no such directory exists in the
+repository, and that description is withdrawn. No user data, scraped web
+content, or proprietary API traces are present.
+
+\paragraph{No web scraping, no human subjects.}
+We did not scrape any website. We did not run any study with human
+participants. No IRB review was therefore required. No data that could
+reasonably be considered to contain PII, copyrighted content, or sensitive
+personal attributes was used at any stage of training, evaluation, or
+reward modelling.
+
+% ---------------------------------------------------------------------------
+\subsection{Closed-Source Tinker Acknowledgment}
+\label{sec:tinker_closed}
+% ---------------------------------------------------------------------------
+
+A central tension in \ours{} is that a substantial fraction of our
+headline numbers come from a closed-source commercial platform while our
+paper simultaneously advocates for reproducibility and platform
+independence. We do not resolve this tension by hiding it; we describe
+it precisely.
+
+\paragraph{What Tinker is and is not.}
+Tinker \cite{thinkingmachines2024tinker} is a managed LLM fine-tuning and
+inference service provided by Thinking Machines, Inc. It exposes a Python
+SDK (stated elsewhere as \texttt{tinker==0.16.1}; the Hub model cards of the
+reviewed cells state v0.18.1, and the executed version is not bound) that accepts custom loss functions
+(\texttt{forward\_backward\_custom}), a limited set of optimisers, and
+standard LoRA hyperparameters. Local scripts specify reward normalization, baseline subtraction, custom loss,
+and requested LoRA/optimizer configuration. Undisclosed server-side details
+include hardware placement, scheduling, execution numerics, and some batching
+and sampler behavior. These are separate from the inspectable local objective.
+
+\paragraph{What this means for our claims.}
+We have not ruled out seed variance, checkpoint/model-size confounding, evaluator
+differences, or backend effects. The arithmetic/GSM8K cross-library identity is
+unresolved. Tinker results do not establish an upper bound or algorithmic
+superiority. verl/OpenRLHF Task~4 dry runs are engineering artifacts, not
+measured alternatives. The contribution remains the centered-reward identity,
+descriptive audited cells, and reporting contract.
+
+\paragraph{Reproducibility commitments we can make.}
+Section~\ref{sec:reproducibility} distinguishes local source, observed
+configuration, undisclosed internals, and evidence access. A dagger denotes only
+interrupted execution; backend provenance is stated explicitly. Exact checkpoint
+revisions and public access must be verified per artifact; no blanket release
+or future rerun commitment is made here.
+
+\paragraph{Key rotation and credential hygiene.}
+Our Tinker API key (prefix \texttt{tml-...}) is held in a repository
+\texttt{.env.example} placeholder only. The real key is stored in the
+authors' password manager and rotated whenever a failure mode suggests
+possible exfiltration. No Tinker key is committed to git history in
+either the primary repository (\texttt{pes-llm-research/tinker-rl-lab}) or
+the mirror (\texttt{arvindcr4/tinker-rl-lab}).
+
+% ---------------------------------------------------------------------------
+\subsection{Known Methodological Limits}
+\label{sec:methodlimits}
+% ---------------------------------------------------------------------------
+
+In addition to the infrastructure failures and platform-specific caveats
+enumerated in Section~\ref{sec:limitations}, we flag the following
+methodological limits.
+
+\paragraph{Short training horizons.}
+Most reviewed Tinker runs have short, often 30-step horizons; this is not
+a universal limit for all later scripts or campaigns. This is a
+deliberate cost-control choice and means our Tinker numbers are
+\emph{early-training snapshots}. We cannot rule out that longer training
+would change the qualitative picture. The separate held-out GSM8K check (Section~\ref{sec:heldout}) is a
+one-sample seed-level test against a fixed baseline, not paired-seed and not
+reviewed-record evidence; it establishes no held-out gain.
+
+\paragraph{Single-seed Tinker experiments.}
+Each Tinker configuration in the ledger was run once, except Qwen3-8B-Base,
+whose two executions at the same visible settings differ by 13.1 points in
+last-10 reward; best practice prescribes 3--5 runs \cite{henderson2018deep}. Tinker results therefore lack
+variance estimates and do not support significance testing; we report
+them descriptively. Seed-level inference requires the actual independent seed observations and
+an identified estimand; reconstructed seed vectors are not eligible.
+
+\paragraph{Train-set reward as primary Tinker metric.}
+Tinker runs primarily report reward on training prompts. Only the GSM8K
+track was followed up with a separate 200-example held-out evaluation
+per seed. Other Tinker tracks (tool-use, xLAM) remain train-set-only and
+we cannot distinguish memorisation from generalisation for those
+settings.
+
+\paragraph{LoRA only; no full fine-tuning.}
+The reviewed LLM fine-tuning runs use LoRA \cite{hu2022lora}, with settings
+varying by cohort; the Wave~6 rank sweep also includes rank 4. We have
+\emph{not} tested whether full fine-tuning would re-order the
+library/algorithm comparisons. The LoRA constraint is practical (cost) but
+it means our claims about PPO vs.\ GRPO and TRL vs.\ Tinker are
+LoRA-conditional.
+
+\paragraph{Benchmark coverage is narrow.}
+The broader corpus touches GSM8K, MATH-500 (exploratory), HumanEval
+(subset), and synthetic/xLAM tool use; this audit displays only GSM8K and the
+synthetic tool-use cells. We do not evaluate on MT-Bench,
+ArenaHard, safety benchmarks (HarmBench, ToxicChat), or truthfulness
+benchmarks (TruthfulQA). Any claim about ``reasoning'' in the paper is
+strictly a claim about the covered benchmarks.
+
+\paragraph{No human preference data.}
+We use verifiable rewards only (exact-match for math, unit-test for code,
+schema-validity for tool-use). We do not study RLHF with human preference
+data; findings should not be extrapolated to reward-model--based alignment
+without further work.
+
+\paragraph{Closed-source implementation opacity (reiterated).}
+Comparisons between Tinker GRPO and TRL GRPO are confounded by the
+closed-source nature of Tinker's implementation. See
+Section~\ref{sec:tinker_closed} for detail.
+
+\paragraph{Cross-platform hardware confounding.}
+Tinker, Modal, Colab, and the PES A100 node use different accelerators,
+different memory hierarchies, and different inference/training stacks
+(Tinker proprietary, Modal vLLM, Colab PyTorch-native, TRL+Accelerate).
+Observed differences in reward dynamics are not purely algorithmic.
+
+\paragraph{Carbon estimates are approximate.}
+As discussed in Section~\ref{sec:carbon}, Tinker GPU-hour and TDP are
+inferred, not measured. Grid intensity is region-average, not marginal.
+No carbon figure is reported for that reason.
+
+\paragraph{Exploratory, not confirmatory.}
+This is an exploratory case study, not a pre-registered confirmatory
+experiment. We did not pre-register primary hypotheses. The conflicting historical correction families and step-based significance
+decisions are withdrawn (Section~\ref{sec:statistical-policy}); exploratory
+coefficients do not establish calibrated inference.
+
+\paragraph{Geographic and demographic limits.}
+All authors are based at a single institution in Bengaluru, India. Our
+choice of benchmarks, prompt phrasings, and evaluation design reflects
+that context. Independent replication by groups in other regions, on
+non-English tasks, and with non-Qwen / non-Llama families is an open
+question.
+
+% =============================================================================
+% End of ethics_statement.tex

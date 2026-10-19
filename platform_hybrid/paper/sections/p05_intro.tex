@@ -1,0 +1,47 @@
+% Introduction for paper 05 only (platform_hybrid/paper/paper.tex).
+% Forked 2026-10-19 from sections/intro.tex, which is also consumed by the
+% archived U01 compendium roots; edit this file, not the shared one.
+\section{Introduction}
+\label{sec:intro}
+Comparing RL post-training systems requires separating the algorithm name from
+the implemented objective, sampling protocol, checkpoint, and evaluator.
+Implementation sensitivity is already established in policy-gradient
+research~\citep{engstrom2020implementation,henderson2018deep}; heterogeneous
+observations alone do not identify which implementation choice caused a gap.
+
+This manuscript is a bounded audit of one run corpus. Its contributions are:
+\begin{enumerate}
+\item An objective-scoped account of why homogeneous rewards eliminate the
+centred reward-contrast term in the specified noncanonical runner
+(Section~\ref{sec:diagnostic-method}).
+\item An artifact-bound inventory of the two reviewed synthetic tool-use cells,
+with an immutable manifest and the alternative explanations it cannot exclude
+(Section~\ref{sec:evidence-identity}).
+\item A re-audit of the training-reward ledger under one standard: every
+retained number is bound to a named artifact and a correctly labelled window,
+or it is quarantined or withdrawn (Section~\ref{sec:main_results}).
+\end{enumerate}
+These contributions do not include a new diagnostic definition, a controlled
+cross-library benchmark, a validated predictor, triage rule, or stopping rule,
+or an algorithm ranking.
+
+\paragraph{Relation to existing zero-advantage diagnostics.}
+The fraction of groups with zero reward variance is already an operational
+quantity in group-relative RL: AVSPO's Advantage Collapse Rate measures the
+same object up to a tolerance~\citep{he2026advantage}, and dynamic sampling in
+DAPO~\citep{yu2025dapo} and variance- or pass-rate-based prompt selection
+(e.g., VCRL~\citep{jiang2025vcrl}) act on it. We therefore use the name
+Zero-Variance Fraction (ZVF) only as a reporting field and claim no new
+measurable, estimator, or intervention. Its complement is called the
+\emph{mixed-group fraction} here (historical alias: Gradient Utilization, GU);
+it measures only the fraction of groups with nonconstant rewards, not gradient
+magnitude or usefulness. For binary rewards it should be reported signed
+(all-wrong, all-correct, mixed) rather than as one number.
+
+\paragraph{Why an audit.}
+The corpus was assembled for an earlier, broader manuscript. Re-checking its
+displays against the stored artifacts showed mislabelled windows, rows whose
+two artifact versions disagree, and summaries with no released source
+(Section~\ref{sec:main_results}). Readers of any text that reuses this corpus
+need those dispositions; the relationship to those texts is mapped in
+Section~\ref{sec:overlap}.

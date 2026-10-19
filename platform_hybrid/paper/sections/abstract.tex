@@ -5,17 +5,11 @@
 % =============================================================================
 \begin{abstract}
 Group-relative RL can lose its reward-driven learning signal when every
-completion for a prompt receives the same reward. This is a diagnostic audit and
-correction record, not a new algorithm, benchmark, or algorithm ranking. It is a
+completion for a prompt receives the same reward. This manuscript is a
 descendant of NeurIPS submission \#36320, not its authenticated or byte-identical
-reviewed PDF; we audit that submitted record rather than claiming that local edits
-change it (overlap map in Section~\ref{sec:intro}). The descriptive reporting field
-Zero-Variance Fraction (ZVF) records homogeneous reward groups; its complement
-$1-\mathrm{ZVF}$ is the mixed-group fraction (historical alias: Gradient
-Utilization, GU, which measures neither gradient magnitude nor usefulness). Whether
-reward contrast, rather than algorithm labels, explains cross-stack gaps is a
-hypothesis this audit does \emph{not} demonstrate: no same-stack identified contrast
-manipulation is reported.
+reviewed PDF. We audit that submitted record rather than claiming that local edits
+change it. Our diagnostic, Zero-Variance Fraction (ZVF), records homogeneous reward
+groups; its submitted complement is Gradient Utilization (GU=$1-\mathrm{ZVF}$).
 In the two reviewed synthetic tool-use cells, reward is 0, ZVF is 1, GU is 0,
 and held-out performance was not evaluated. These are two descriptive all-wrong
 cases, not a validated predictor or stopping policy. For the submitted

@@ -23,7 +23,7 @@
   root/.style={
     rectangle, rounded corners=6pt,
     fill=RootBg, draw=RootBlue, line width=1.2pt,
-    text=RootBlue, font=\bfseries\small,
+    text=RootBlue, font=\bfseries\normalsize,
     inner sep=6pt, minimum width=3.2cm, minimum height=0.65cm,
     align=center
   },
@@ -31,7 +31,7 @@
   category/.style={
     rectangle, rounded corners=5pt,
     fill=MidBg, draw=MidBlue, line width=0.9pt,
-    text=MidBlue, font=\bfseries\scriptsize,
+    text=MidBlue, font=\bfseries\footnotesize,
     inner sep=5pt, minimum width=2.6cm, minimum height=0.58cm,
     align=center
   },
@@ -39,7 +39,7 @@
   leaf/.style={
     rectangle, rounded corners=4pt,
     fill=LeafBg, draw=LeafGreen, line width=0.8pt,
-    text=black, font=\scriptsize,
+    text=black, font=\footnotesize,
     inner sep=4pt, minimum width=2.4cm, minimum height=0.52cm,
     align=center
   },
@@ -47,8 +47,8 @@
   badge/.style={
     rectangle, rounded corners=2pt,
     fill=BadgeBg, draw=ArrowGray!60, line width=0.5pt,
-    text=ArrowGray, font=\tiny,
-    inner sep=2pt
+    text=black, font=\scriptsize,
+    inner sep=2.5pt, align=center
   },
   % Arrow style
   treearrow/.style={
@@ -63,30 +63,30 @@
   \node[root] (root) {TinkerRL Benchmark};
 
   % ── Category nodes (placed below root with horizontal spread) ─────────────
-  \node[category, below left=1.1cm and 2.3cm of root]  (math)  {Mathematical\\Reasoning};
+  \node[category, below left=1.0cm and 0.9cm of root]  (math)  {Mathematical\\Reasoning};
   \node[category, below=1.1cm of root]                  (tool)  {Tool Use};
-  \node[category, below right=1.1cm and 2.3cm of root] (code)  {Code\\Generation};
+  \node[category, below right=1.0cm and 0.9cm of root] (code)  {Code\\Generation};
 
   % ── Leaf nodes ────────────────────────────────────────────────────────────
   % Math → GSM8K
   \node[leaf, below=0.9cm of math] (gsm8k) {GSM8K};
   \node[badge, below=0.18cm of gsm8k] (gsm8k_badge)
-        {\textbf{8} models exercised \quad \textcolor{LeafGreen}{$\checkmark$ Complete}};
+        {\textbf{8} models exercised\\\textcolor{LeafGreen}{$\checkmark$ Complete}};
 
   % Math → Arithmetic (measured G-sweep task)
   \node[leaf, below=0.55cm of gsm8k_badge] (arith) {Arithmetic\\(two-operand addition)};
   \node[badge, below=0.18cm of arith] (arith_badge)
-        {measured $G$-sweep task \quad \textcolor{LeafGreen}{$\checkmark$ Complete}};
+        {measured $G$-sweep task\\\textcolor{LeafGreen}{$\checkmark$ Complete}};
 
   % Tool → Function Calling
   \node[leaf, below=0.9cm of tool] (fc) {Function Calling};
   \node[badge, below=0.18cm of fc] (fc_badge)
-        {\textbf{2} models exercised \quad \textcolor{MidBlue}{$\sim$ In progress}};
+        {\textbf{2} models exercised\\\textcolor{MidBlue}{$\sim$ Partial}};
 
   % Code → HumanEval
   \node[leaf, below=0.9cm of code] (he) {HumanEval};
   \node[badge, below=0.18cm of he] (he_badge)
-        {\textbf{1} model exercised \quad \textcolor{ArrowGray}{$\circ$ Planned}};
+        {\textbf{1} model exercised\\\textcolor{MidBlue}{$\sim$ Partial}};
 
   % ── Edges: root → categories ──────────────────────────────────────────────
   \draw[treearrow] (root.south) -- ++(0,-0.4) -| (math.north);
@@ -100,12 +100,11 @@
   \draw[treearrow] (code.south) -- (he.north);
 
   % ── Legend (darker text for print readability) ────────────────────────────
-  \node[font=\scriptsize\bfseries, text=black, align=left,
-        below=0.55cm of arith_badge, xshift=2.0cm]
+  \node[font=\footnotesize\bfseries, text=black, align=left,
+        below=0.45cm of arith_badge -| tool]
   {%
-    \textcolor{LeafGreen}{$\checkmark$} Complete \enspace
-    \textcolor{MidBlue}{$\sim$} In progress \enspace
-    \textcolor{ArrowGray}{$\circ$} Planned%
+    \textcolor{LeafGreen}{$\checkmark$} Complete \qquad
+    \textcolor{MidBlue}{$\sim$} Partial%
   };
 
 \end{tikzpicture}

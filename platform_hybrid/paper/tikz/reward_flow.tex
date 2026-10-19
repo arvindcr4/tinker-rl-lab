@@ -24,7 +24,7 @@
   modelnode/.style={
     rectangle, rounded corners=6pt,
     fill=ModelBg, draw=ModelOrange, line width=1.1pt,
-    text=ModelOrange, font=\bfseries\scriptsize,
+    text=ModelOrange, font=\bfseries\footnotesize,
     inner sep=6pt, minimum width=1.7cm, minimum height=0.65cm,
     align=center
   },
@@ -32,15 +32,15 @@
   compnode/.style={
     rectangle, rounded corners=5pt,
     fill=CompBg, draw=CompBlue, line width=0.9pt,
-    text=CompBlue, font=\scriptsize,
-    inner sep=5pt, minimum width=1.9cm, minimum height=0.60cm,
+    text=CompBlue, font=\footnotesize,
+    inner sep=4pt, minimum width=1.9cm, minimum height=0.60cm,
     align=center
   },
   % Data / intermediate-result node
   datanode/.style={
     rectangle, rounded corners=5pt,
     fill=DataBg, draw=DataGreen, line width=0.9pt,
-    text=DataGreen, font=\scriptsize,
+    text=DataGreen, font=\footnotesize,
     inner sep=5pt, minimum width=1.7cm, minimum height=0.58cm,
     align=center
   },
@@ -48,7 +48,7 @@
   formulabox/.style={
     rectangle, rounded corners=3pt,
     fill=FormulaBg, draw=FormulaBorder, line width=0.7pt,
-    text=black, font=\scriptsize,
+    text=black, font=\footnotesize,
     inner sep=4pt, align=center
   },
   % Arrow
@@ -57,7 +57,7 @@
   },
   % Arrow label
   arrowlabel/.style={
-    font=\tiny, text=ArrowDark, midway, above, inner sep=1.5pt
+    font=\scriptsize, text=ArrowDark, midway, above, inner sep=1.5pt
   }
 }
 
@@ -70,19 +70,19 @@
   \node[modelnode] (llm_in) {LLM};
 
   % 2. Generate G responses
-  \node[compnode, right=0.9cm of llm_in] (gen) {Generate\\$G$ Responses};
+  \node[compnode, right=1.15cm of llm_in] (gen) {Generate\\$G$ Responses};
 
   % 3. Reward function
-  \node[compnode, right=0.9cm of gen] (rf) {Reward\\Function};
+  \node[compnode, right=0.5cm of gen] (rf) {Reward\\Function};
 
   % 4. Compute advantages
-  \node[compnode, right=0.9cm of rf] (adv) {Compute\\Advantages};
+  \node[compnode, right=0.5cm of rf] (adv) {Compute\\Advantages};
 
   % 5. Policy gradient update
-  \node[compnode, right=0.9cm of adv] (pg) {Policy\\Gradient\\Update};
+  \node[compnode, right=0.5cm of adv] (pg) {Policy\\Gradient\\Update};
 
   % 6. Updated LLM (output)
-  \node[modelnode, right=0.9cm of pg] (llm_out) {Updated\\LLM};
+  \node[modelnode, right=1.15cm of pg] (llm_out) {Updated\\LLM};
 
   % ── Data annotations (below each node) ───────────────────────────────────
 
@@ -103,7 +103,7 @@
   \draw[flowarrow] (gen.east)     -- (rf.west);
   \draw[flowarrow] (rf.east)      -- (adv.west);
   \draw[flowarrow] (adv.east)     -- (pg.west);
-  \draw[flowarrow] (pg.east)      -- node[arrowlabel]{updated weights} (llm_out.west);
+  \draw[flowarrow] (pg.east)      -- node[arrowlabel, align=center]{updated\\weights} (llm_out.west);
 
   % ── Arrows from pipeline nodes to data annotations ────────────────────────
   \draw[flowarrow, dashed, color=DataGreen!70]
@@ -121,17 +121,17 @@
   {%
     $\hat{A}_i = \dfrac{r_i - \bar{r}}{\sigma_r}$%
     \quad
-    \footnotesize where $\bar{r}=\mathrm{mean}(\{r_i\}),\;\sigma_r=\mathrm{std}(\{r_i\})$%
+    where $\bar{r}=\mathrm{mean}(\{r_i\}),\;\sigma_r=\mathrm{std}(\{r_i\})$%
   };
 
   % ── Feedback loop arrow (Updated LLM → LLM) ───────────────────────────────
   % Arc above the pipeline
   \draw[flowarrow, color=ModelOrange!80, dashed, rounded corners=6pt]
         (llm_out.north)
-        -- ++(0, 0.55)
-        -- ++(-7.55, 0)
-        -- (llm_in.north)
-        node[midway, above, font=\tiny, text=ModelOrange!80] {next iteration};
+        -- ++(0, 0.45) coordinate (loop_r)
+        -| (llm_in.north);
+  \node[above, font=\scriptsize, text=ModelOrange!80]
+        at ($(loop_r)!0.5!(loop_r -| llm_in.north)$) {next iteration};
 
 \end{tikzpicture}
 \end{document}

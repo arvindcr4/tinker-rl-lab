@@ -31,6 +31,8 @@ Rank 1 ("Dense vs MoE", p = 2.4e-21) and the ‡ rows come from per-step pseudo-
 
 Figures 1–3 of P1 render as "[missing figure artifact]" placeholders because only the `.tex` sources exist in `tikz/`. Please build them centrally. When doing so: enlarge the node fonts, use "~ Partial" consistently for HumanEval (not "◦"), and use G rather than N for group size in `reward_flow`.
 
+**Status: done** (branch `fix/shared-tikz-figures`). The three PDFs are now built and tracked, node fonts are enlarged, HumanEval and Function Calling both show "~ Partial" to match the caption, and `reward_flow` already used G and is now included at `\textwidth`. Findings 36 and 41–43 are fixed.
+
 ## R5. `references.bib`: no changes needed for P1
 
 The duplicate Kaplan and Nimmaturi entries, the Kimi capitalisation, OpenHands and the self-citation (findings 65–69) all render correctly in the current build.

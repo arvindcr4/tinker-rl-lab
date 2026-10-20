@@ -173,7 +173,7 @@ per-rollout logs.}
 \end{table}
 
 \paragraph{200-step runs at a 1024-token cap (October 2026).}
-To reach a longer horizon without censoring, we reran the GSM8K-CoT arms for
+To reach a longer horizon with less cap censoring, we reran the GSM8K-CoT arms for
 200 steps with the cap raised to 1024 tokens (same driver and held-out slice;
 three seeds per algorithm; Colab A100;
 \texttt{experiments/results/review\_2026-10-19/p4\_long\_horizon/}).
@@ -184,11 +184,18 @@ rollouts shorten; under GRPO correct rollouts shorten too, while under
 Dr.\,GRPO they stay flat. Incorrect-rollout length does not trend upward in any
 run (Spearman $\rho$ with step between $-0.47$ and $-0.07$). Held-out accuracy
 after 200 steps is $0.690$ (Dr.\,GRPO) and $0.702$ (GRPO) against $0.695$
-before training, with improved and regressed items nearly balanced in every
-run, so these runs show no held-out gain and no difference between algorithms
-at three seeds. One GRPO run (seed 456) resumed from an integrity-checked
-checkpoint after 190 steps on a different A100 variant; its timing is not
-comparable. This is still a 1.5B model at 200 steps; it does not reproduce
+before training. Seed-level post-training accuracies are $0.685$, $0.700$,
+and $0.685$ for Dr.\,GRPO and $0.705$, $0.715$, and $0.685$ for GRPO
+(seeds 42, 123, and 456, respectively). The mean changes are $-0.50$ and
+$+0.67$ percentage points, respectively; the descriptive GRPO-minus-Dr.\,GRPO
+difference is $+1.17$ points. Improved and regressed items are nearly balanced
+in every run. These small, mixed changes do not establish a reliable
+held-out improvement or an algorithmic advantage at three seeds, and are
+not evidence of equivalence. One GRPO run (seed 456) resumed from an
+integrity-checked checkpoint after 190 steps, moving from an A100 40GB to
+an A100 80GB for the last ten steps and final evaluation; its timing is
+not comparable to an uninterrupted run on one GPU variant. This is still
+a 1.5B model at 200 steps; it does not reproduce
 the larger-model setting of \cite{tong2025drgrpo}.
 
 \begin{table}[htbp]

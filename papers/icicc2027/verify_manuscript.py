@@ -25,7 +25,7 @@ def check_printed_arithmetic(tex):
         precision = len(printed.split(".")[1])
         assert round(value, precision) == float(printed), (numerator, denominator, printed)
     conditional = re.search(
-        r"(\d[\d,]*)/\((\d[\d,]*)-(\d[\d,]*)\)\s*=\s*(\d[\d,]*)/(\d[\d,]*)", tex
+        r"(\d[\d,]*)/\((\d[\d,]*)(?:-|\$-\$)(\d[\d,]*)\)\s*=\s*(\d[\d,]*)/(\d[\d,]*)", tex
     )
     assert conditional, "Missing extraction-conditional denominator"
     numerator, total, failed, repeated, extracted = (

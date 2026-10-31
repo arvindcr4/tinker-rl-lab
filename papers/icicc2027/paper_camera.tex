@@ -4,8 +4,7 @@
 \documentclass[a4paper,runningheads]{llncs}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage{graphicx,booktabs,amsmath,amssymb,array,tabularx,url,xurl,microtype,tikz}
-\usetikzlibrary{arrows.meta,positioning}
+\usepackage{graphicx,booktabs,amsmath,amssymb,array,tabularx,url,xurl,microtype}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \ifx\XeTeXversion\undefined\else\emergencystretch=2.5em\fi
 \begin{document}
@@ -22,7 +21,7 @@ execution evidence. We report an experience case study of receipt-bound
 reporting for one language-model actor across fourteen agentic and reasoning
 lanes: 23 tracked original/replacement scopes, three historically strictly
 complete. It does not test the actor's reported 40-step group-relative
-post-training: with 35/40 zero-loss steps and a null pilot, lane scores are
+post-training: with 35/40 zero-loss steps and an inconclusive pilot, lane scores are
 base-model-plus-serving measurements at pilot resolution. The strictly
 complete scopes are LAB-Bench public (450/1,967), AgentDojo benign utility with
 no attacks run (88/97) and the original VerilogEval contract (129/312).
@@ -47,8 +46,8 @@ serving stack, grader and missing-outcome policy. Agentic evaluations can
 prepare hundreds of tasks while grading few, replace a gated benchmark with a
 public proxy, or keep a number after losing its execution source. Holdout and
 reproducibility problems are established concerns in language-model and agent
-evaluation~\cite{liang2023helm,biderman2024lessons,kapoor2024agentsmatter};
-harnesses standardize tasks and prompts, whereas our unit is a run's scope,
+evaluation~\cite{biderman2024lessons,kapoor2024agentsmatter}; harnesses
+and holistic suites~\cite{liang2023helm} standardize tasks and prompts, whereas our unit is a run's scope,
 coverage stage and evidence state.
 
 The actor has a reported group-relative policy-gradient (GRPO~\cite{shao2024deepseekmath})
@@ -59,16 +58,19 @@ each printed number carries its scope, counts and evidence tier; it asserts no
 enforcement regime. Training-suite separation is not item-level
 decontamination, and no held-out claim is made.
 
-Contributions are (i) a \textbf{receipt-bound reporting structure} joining
-scope, actor, serving configuration, grader, outcomes and evidence
-availability; (ii) a \textbf{coverage taxonomy} separating preparation,
-attempts, native grading and original versus replacement contracts; (iii) a
-\textbf{dated case study} retaining errors, incomplete scopes and protocol
-changes rather than pooling unlike results; and (iv) a \textbf{failure
-description} separating observed formatting failures from unverified
-explanations, stating where causes cannot be apportioned. This is not a new
-optimizer, benchmark or validated method; no controlled study shows that the
-structure reduces errors, costs or replication time.
+The main contributions are:
+\begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+\item a \textbf{receipt-bound reporting structure} joining scope, actor,
+serving configuration, grader, outcomes and evidence availability;
+\item a \textbf{coverage taxonomy} separating preparation, attempts, native
+grading and original versus replacement contracts;
+\item a \textbf{dated case study} retaining errors, incomplete scopes and
+protocol changes rather than pooling unlike results;
+\item a \textbf{failure description} separating observed formatting failures
+from unverified explanations, stating where causes cannot be apportioned.
+\end{itemize}
+This is not a new optimizer, benchmark or validated method; no controlled study
+shows that the structure reduces errors, costs or replication time.
 
 \section{Related Work and Benchmark Identity}
 Reproducibility studies~\cite{henderson2018deep,pineau2020improving} motivate
@@ -97,8 +99,7 @@ measures Olympiad mathematics~\cite{gao2024omnimath}. The Tau3 banking
 replacement is the $\tau^3$ banking-knowledge component of Sierra's
 $\tau$-Knowledge release~\cite{shi2026tauknowledge}, not the original
 $\tau$-bench. The E2, E3, E6, E7, E12 and E13 originals are identified only by
-mutable websites or repositories, not archival papers; verified links and
-unresolved identity details accompany the source package. Comparability
+mutable websites or repositories, not archival papers. Comparability
 requires matching items, framing, grader, scaffold, sampling budget and error
 handling, so no leaderboard numbers are attached; only the same-engine pilot
 supports a limited trained/base contrast (Sect.~\ref{sec:paired}).
@@ -147,7 +148,7 @@ is marked, not cleared: SWE-Gym plausibly touches the software lanes
 source-by-lane cell is un-audited.
 
 \textbf{Reading lane scores.} Given 35/40 zero-loss steps, the unverifiable
-objective and the null pilot (Sect.~\ref{sec:paired}), each lane score is, at
+objective and the inconclusive pilot (Sect.~\ref{sec:paired}), each lane score is, at
 pilot resolution, a base-model-plus-serving measurement under the stated
 adapter, scaffold and decoding, not a GRPO effect; decoding differences
 (temperature 0 to 1) preclude lane ranking.
@@ -188,8 +189,8 @@ and approved resources; a changed scaffold or population is a new scope.
 Table~\ref{tab:inference} records available settings without filling gaps from
 provider defaults; output caps and context windows differ. The
 inventory covers every scored/attempted scope with source
-pointers. No complete configuration is recoverable for all historical lanes,
-which does not license assuming a common treatment.
+pointers. Complete configurations are not recoverable for all historical lanes, so
+no common treatment is assumed.
 
 \begin{table}[t]
 \caption{Available inference fields. NR = not recovered; NR never means a
@@ -264,7 +265,7 @@ eight categories. Diagnostic aggregates report 1,259 unparsed responses
 (64.0\%) and 1,086 length finishes; their intersection cannot be reconstructed
 because exported grade rows lack parsed-answer membership, and neither is a
 proven cause of the other. \emph{Non-citable sensitivity, not a score:} the
-conditional 450/(1,967-1,259) = 450/708 = 63.56\% has unverified membership.
+conditional 450/(1,967$-$1,259) = 450/708 = 63.56\% has unverified membership.
 
 \textbf{VerilogEval (E11-O).} Code completion gives 67/156 and
 specification-to-RTL 62/156, totaling 129/312. The 156 shared designs require
@@ -315,8 +316,7 @@ close these gated originals.
 \subsection{Later Replacement Results}
 \label{sec:later}
 Six replacements completed execution on 27 September (Table~\ref{tab:later});
-earlier quota, IAM and launch states are historical. Figure~\ref{fig:states}
-keeps O/R distinct.
+Fig.~\ref{fig:states} keeps O/R distinct.
 
 \begin{table}[t]
 \caption{Later replacement executions. Terminal task errors count as failures;
@@ -343,8 +343,9 @@ driver relaunches, never resampling. E2-R archives 72 infrastructure-aborted
 task attempts from four harness restarts, plus one standard rerun per spot
 preemption, never rerunning because of score. E5-R discarded five cold-start
 attempts; E6-R ran each task once (call-level retries only); E9-R excluded a
-hung four-task batch; E13-R has 262 attempt records for 255 episodes, rerunning
-11 killed or hung episodes with new seeds. Denominators count final outcomes,
+hung four-task batch; E13-R has 262 attempt records for 255 episodes (seven
+killed-for-restart records; the receipt narrative cites 11 killed or hung
+episodes rerun with new native seeds). Denominators count final outcomes,
 so retry-on-failure can bias scores upward. Primary-lane attempt records and
 retry rules are not recovered. E5-R's 25 infrastructure errors are 24 records
 deleted from \texttt{results.json} by an accidental \texttt{--auto-resume}
@@ -353,8 +354,8 @@ a five-task rerun; 8/72 = 0.111 excluding them is only sensitivity. E1-R counts
 120 patch/evaluation errors and 13 empty patches as failures (conditional 1/57
 graded = 0.0175); earlier multilingual waves (4/110, different
 context/scaffold) are not pooled. WebArena's 108 ungraded tasks make 90/812 a
-lower bound with logical upper bound 198/812 = 0.244. BALROG is an equal-weight
-mean of six environment means, not a pass rate.
+lower bound with logical upper bound 198/812 = 0.244. BALROG averages six
+environment means; it is not a pass rate.
 
 \begin{figure}[t]\centering\small
 \begin{tabular}{@{}l@{\quad}l@{\qquad}l@{\quad}l@{}}\toprule
@@ -438,8 +439,7 @@ retained package; the mirror's existence does not reproduce it.
 The 19 September check receipt records 11 passes: selected divisions, E11's
 component sum, E9 coverage, E14 accepted rows, E8 category coverage, strict
 scope labels, two hash bindings and missing-source probes of four
-\texttt{.codex-run} paths on E1 (two), E6 and E9. Reading this record
-is not rerunning all original checks.
+\texttt{.codex-run} paths on E1 (two), E6 and E9.
 
 \textbf{Evidence tiers.} \emph{Recountable JSON:} the six later-replacement
 result records, the E11 cluster bootstrap and all pilot paired outcomes.
@@ -449,17 +449,25 @@ E8-R unparsed/length counts, E10-R detail, the E14-R cap split and partial
 originals. ``Receipt-bound'' means only this tiering; the source map gives
 per-claim tiers.
 
-\section{Limitations, Applications and Conclusion}
+\section{Practical and Societal Impact}
+For evaluation teams, the scope--coverage--evidence record is a reporting
+checklist: a reader can see what was prepared, attempted and natively graded,
+which scope replaced a gated original, and which numbers lack retained
+evidence. Societally,
+published agent scores inform deployment and policy decisions; stating their
+scope and missing evidence lowers the risk that incomplete runs are read as
+capability or safety claims. These are intended uses, not measured effects.
+
+\section{Limitations and Conclusion}
 This single-actor campaign has no primary full-scale matched baseline,
 training-seed variance estimate or complete overlap audit. Decoding conditions
 and access-selected replacements confound capability comparisons; the original
 sampler cannot be replayed, and hashes recover neither missing evidence nor
-semantic correctness. Before accepting retained evidence, review the contract,
-coverage, exclusions and actor/grader binding: benign utility is not a security
-result and a blocked scope is not a passed test. Better retention and targeted
-reruns are proposed, unmeasured benefits; no score or receipt label
-certifies safe deployment. The contribution is disciplined reporting, not a
-GRPO gain or universal reproducibility. Matched baselines, item-level overlap
+semantic correctness. The 2/731 SWE-bench Pro score is dominated by 593
+patches that failed to apply, and the zero in a secondary BankerToolBench record (raw
+receipt absent) came through a bridge that allowed invented dialogue turns; neither isolates capability.
+Whether the structure generalizes to other actors and suites is untested. No score or receipt label
+certifies safe deployment. Matched baselines, item-level overlap
 checks, finish-reason instrumentation and an independent effectiveness test
 remain future work.
 

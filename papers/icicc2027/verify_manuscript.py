@@ -110,8 +110,8 @@ def main():
     assert all(row.split()[-5] == "yes" and "Type 3" not in row for row in font_rows)
     image_rows = images.splitlines()[2:]
     assert not image_rows
-    assert r"\author{Arvind C R \and Ramesh Prakash Guledgudd}" in tex
-    assert r"\email{arvindcr4@gmail.com}" in tex
+    assert r"\author{Arvind C R$^{\star}$ \and Ramesh Prakash Guledgudd}" in tex
+    assert r"\email{arvindcr4@gmail.com, rameshpg1988@gmail.com}\\$^{\star}$Corresponding author, +91 6379485347" in tex
     tables = tex.count(r"\begin{table}")
     figures = tex.count(r"\begin{figure}")
     equations = tex.count(r"\begin{equation}")

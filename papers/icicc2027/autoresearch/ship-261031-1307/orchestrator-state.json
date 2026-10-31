@@ -1,0 +1,19 @@
+{
+  "goal": "run the submission draft by all the relevant skills to get a fine submission that gets accepted",
+  "archetype": "ship-ready",
+  "mode": "loop",
+  "budget": "1 hour (13:05-14:05 IST)",
+  "predicate": "python3 papers/icicc2027/autoresearch/ship-261031-1307/icicc_ready.py -> exit 0, READY",
+  "terminal_choice": "stop-at-verified",
+  "units_remaining": [2, 0, 1, 0, 0],
+  "cycles": 3,
+  "pipeline": [
+    {"hop": "round0-predicate", "outcome": "progressed", "note": "2 units: R2.5 contribution bullets, R2.7 impact section"},
+    {"hop": "fix-structure", "outcome": "progressed", "note": "bullets + Practical and Societal Impact section; 5 ICLR URLs and 3 redundant sentences cut to hold 12 pp"},
+    {"hop": "paper-self-review+springer-lncs panel", "outcome": "progressed", "note": "16 findings; applied F2,F3,F12,F13,F14; F6 later reverted by verify; author-owed F8-F11,F16 flagged"},
+    {"hop": "paper-claim-audit", "outcome": "progressed", "note": "~170 numbers, 169 verified; E13 restart-count source inconsistency disclosed in text"},
+    {"hop": "citation-audit", "outcome": "progressed", "note": "8 published versions found; 5 applied after independent PMLR/Crossref/ICLR check; kapoor/siegel/zhu venues unverified (OpenReview/DBLP blocked) -> left for author; HELM moved to supported clause; 4 metadata fixes"},
+    {"hop": "verify (independent)", "outcome": "progressed", "note": "26 hunks: 23 OK, 3 regressions corrected (externally-blocked gloss removed, BTB secondary-record qualifier restored, E13 rerun detail restored)"}
+  ],
+  "verdict": "CONVERGED"
+}
